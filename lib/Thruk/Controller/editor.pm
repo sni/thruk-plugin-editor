@@ -93,12 +93,16 @@ sub index {
         my $json = { 'rc' => $rc, 'msg' => $msg };
         return $c->render(json => $json);
     } else {
+        my $all_files = {};
         my $folders = [];
         for my $edit (@{$edits}) {
             my $folder = { name => $edit->{'name'} || '', 'dirs' => {}, 'files' => {} };
-            push @{$folders}, _get_files_and_folders($folder, $edit);
+            my($data, $flat) = _get_files_and_folders($folder, $edit);
+            push @{$folders}, $data;
+            %{$all_files} = (%{$all_files}, %{$flat});
         }
         $c->stash->{files_tree} = $folders;
+        $c->stash->{files_meta} = $all_files;
     }
 
     Thruk::Utils::ssi_include($c);
@@ -139,7 +143,7 @@ sub _get_files_and_folders {
         }
         $cur->{'files'}->{$filename} = { 'syntax' => $meta->{'syntax'} || '', path => $origpath, action => $meta->{'action'} };
     }
-    return $data;
+    return($data, $all_files);
 }
 
 ##########################################################

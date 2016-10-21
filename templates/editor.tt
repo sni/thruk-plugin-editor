@@ -42,7 +42,7 @@
   [% FOREACH f = dir.files.keys.sort %]
     <ul>
       <li class="file_node">
-        <a href='#' onclick='_load_file("[% dir.files.$f.path %]/[% f %]", "[% dir.files.$f.syntax %]", [% json_encode(dir.files.$f.action) %])'>[% f %]</a>
+        <a href='#' onclick='_load_file("[% dir.files.$f.path %]/[% f %]")'>[% f %]</a>
       </li>
     </ul>
   [% END %]
@@ -102,5 +102,10 @@
   </tr>
 </table>
 
+<script type="text/javascript">
+<!--
+var file_meta_data = [% json_encode(files_meta) %];
+-->
+</script>
 
 [% PROCESS _footer.tt %]

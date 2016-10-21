@@ -46,6 +46,7 @@ jQuery(function($) {
     tabs.find(".ui-tabs-nav").sortable({
       axis: "x",
       stop: function() {
+        _save_open_tabs();
         tabs.tabs("refresh");
       }
     });
@@ -71,6 +72,7 @@ jQuery(function($) {
                 jQuery('.'+id+"-action").hide();
             }
         }
+        _save_open_tabs();
     });
 
     // initialize editor
@@ -87,6 +89,15 @@ jQuery(function($) {
     jQuery('#editor').hide();
 
     _resize_editor_and_file_tree();
+
+    // open previously open tabs
+    var saved_tabs = readCookie('thruk_editor_tabs');
+    if(saved_tabs) {
+        var open = saved_tabs.split(/,/);
+        jQuery(open).each(function(i, p) {
+            _load_file(p);
+        })
+    }
 });
 
 function _close_tab(path) {
@@ -113,6 +124,7 @@ function _close_tab(path) {
         current_open_file = "";
     }
     jQuery('.'+panelId+"-action").remove();
+    _save_open_tabs();
 }
 function _check_changed_file(filename) {
     var editor = ace.edit("editor");
@@ -159,7 +171,10 @@ window.onresize = _resize_editor_and_file_tree;
 var editor_open_files = {};
 var current_open_file = "";
 var tabCounter = 0;
-function _load_file(path, syntax, action_menu) {
+function _load_file(path) {
+    var syntax      = file_meta_data[path].syntax;
+    var action_menu = file_meta_data[path].action;
+
     if(editor_open_files[path]) {
         return;
     }
@@ -200,6 +215,8 @@ function _load_file(path, syntax, action_menu) {
     tabs.tabs("refresh");
     tabCounter++;
 
+    _save_open_tabs();
+
     jQuery('.action_menu').hide();
     jQuery.ajax({
         url: 'editor.cgi',
@@ -239,6 +256,20 @@ function _load_file_complete(path, syntax, data) {
     var tabs = jQuery("#tabs");
     var openTabs = tabs.find(".ui-tabs-nav")[0].childNodes.length;
     tabs.tabs("option", "active", openTabs-1);
+}
+
+function _save_open_tabs() {
+    var open = [];
+    jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
+        var id = jQuery(el).attr('aria-controls');
+        for(var p in editor_open_files) {
+            if(editor_open_files[p].tabId == id) {
+                open.push(p);
+                break;
+            }
+        }
+    });
+    cookieSave('thruk_editor_tabs', open.join(','));
 }
 
 function _load_action_menu(path, action_menu) {
