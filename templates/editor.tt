@@ -1,0 +1,106 @@
+﻿[% PROCESS _header.tt css=["plugins/editor/editor.css", "javascript/jstree-3.0.9/themes/default/style.min.css"]
+                      js=["plugins/editor/editor.js",
+                          "plugins/editor/ace-builds/src-min-noconflict/ace.js",
+                          "plugins/editor/ace-builds/src-min-noconflict/ext-language_tools.js",
+                          "javascript/jstree-3.0.9/jstree.min.js"]
+%]
+[% PROCESS _message.tt %]
+
+<table border="0" width="100%" cellspacing="0" cellpadding="0" id="top_pane"[% IF hidetop == 1 %]style="visibility:hidden; display:none;"[% END %]>
+  <tr>
+    <td align="left" valign="top" width="33%">
+      <table class='infoBox' border="1" cellspacing="0" cellpadding="0">
+        <tr>
+          <td class='infoBox'>
+            <div class='infoBoxTitle'>[% infoBoxTitle %]</div>
+            Thruk [% version %][% IF branch %]-[% branch %][% END %]<span class="infoboxlinks"> - <a href='http://www.thruk.org' target='_blank' class='homepageURL'>www.thruk.org</a>[% IF c.config.extra_version %] - <a href='[% c.config.extra_version_link %]' target='_blank' class='homepageURL'>[% c.config.extra_version %]</a>[% END %]</span><br />
+            Logged in as <i>[% remote_user %]</i><br />
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <div align="center" class='statusTitle'>Editor</div>
+    </td>
+    <td align="center" valign="top" width="33%"></td>
+    <td align="right" valign="bottom">
+      [% PROCESS _help.tt topic = "editor" %]
+    </td>
+  </tr>
+</table>
+
+[% BLOCK dir_block %]
+  [% FOREACH d = dir.dirs.keys.sort %]
+  [% folder = dir.dirs.$d %]
+    <ul>
+      <li>
+        <a href="#">[% d %]</a>
+        [% INCLUDE dir_block dir = folder %]
+      </li>
+    </ul>
+  [% END %]
+  [% FOREACH f = dir.files.keys.sort %]
+    <ul>
+      <li class="file_node">
+        <a href='#' onclick='_load_file("[% dir.files.$f.path %]/[% f %]", "[% dir.files.$f.syntax %]", [% json_encode(dir.files.$f.action) %])'>[% f %]</a>
+      </li>
+    </ul>
+  [% END %]
+[% END %]
+
+<table style="table-layout: fixed; border-collapse: collapse;" border=0 id="treetable" width="100%">
+  <tr>
+    <td valign="top" style="text-align: left; width: 200px; border: 1px solid grey; background: white;">
+      <div style="width: 200px; height: 34px; border-bottom: 1px solid grey;">
+        <div id="tool_set">
+          <input type="radio" name="expand" id="tool_collapse"><label for="tool_collapse">C</label>
+          <input type="radio" name="expand" id="tool_expand"><label for="tool_expand">E</label>
+          <input type="text" style="width: 100px; margin-left: 20px; margin-top: 4px;" placeholder="search..." onkeyup="_tree_search(this.value)">
+        </div>
+      </div>
+      <div id="container">
+      <ul>
+        [% FOREACH edit = files_tree %]
+        <li id="o_[% loop.index %]">
+          <a href="#">[% edit.name %]</a>
+          [% INCLUDE dir_block dir = edit %]
+        </li>
+        [% END %]
+      </ul>
+      </div>
+    </td>
+    <td valign="top" style="border: 1px solid grey; background: white;">
+    <div id="tabs"><ul></ul></div>
+    <div id="editor"></div>
+    </td>
+    <td valign="top" style="width: 200px;">
+
+
+<table border='0' cellpadding="0" cellspacing="0" style="margin-left: 4px; margin-top: -2px;">
+  <tr>
+    <td align="center" valign="top" class='confPanel'>
+      <div class='dataTitle'>Actions</div>
+      <table border='1' cellpadding="0" cellspacing="0" class="command extCommandPanel confPanel" id="action_menu_table">
+        <tr>
+          <td class="command">
+            <a href='' onclick='_save_current_file(); return(false);'>
+              <span class="icon"><img id="saveicon" class="black_white" src='[% url_prefix %]themes/[% theme %]/images/disk.png' border="0" alt='Save Changes' title='Save Changes' width="16" height="16"></span>Save Changes
+            </a>
+            <span style="color: grey;"> (Ctrl+s)</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+
+
+
+
+    </td>
+  </tr>
+</table>
+
+
+[% PROCESS _footer.tt %]
