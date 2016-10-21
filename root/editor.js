@@ -398,13 +398,14 @@ function _save_current_file() {
         },
         type: 'POST',
         success: function(data) {
-            jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/accept.png');
-            window.setTimeout(function() {
-                jQuery('#saveicon').attr('src', oldSrc);
-            }, 1000);
             editor_open_files[path].md5      = data.md5;
             editor_open_files[path].origText = savedText;
             _check_changed_file(path);
+            jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/accept.png').removeClass("black_white");
+            window.setTimeout(function() {
+                jQuery('#saveicon').addClass("black_white");
+                jQuery('#saveicon').attr('src', oldSrc);
+            }, 1000);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             jQuery('#saveicon').attr('src', oldSrc);
