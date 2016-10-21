@@ -133,6 +133,7 @@ function _check_changed_file(filename) {
             }
             file.changed = false;
             jQuery('#saveicon').addClass("black_white");
+            jQuery("#"+file.tabId+"-tablink SPAN.file-changed").text("*");
         }
     }
 }
@@ -165,6 +166,40 @@ function _load_file(path, syntax, action_menu) {
     if(action_menu.length > 0) {
         jQuery('#action_menu_table > tbody:last-child').append("<tr class='nohover menu-loading'><td colspan=2><hr></td></tr><tr class='nohover menu-loading'><td colspan=2><img src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif' width=16 height=16></td></tr");
     }
+
+    // check if that file is already open
+    if(editor_open_files[path]) {
+        return;
+    }
+
+    var mode = "ace/mode/plain_text";
+    if(syntax != "") {
+        mode = "ace/mode/"+syntax;
+    }
+    current_open_file = path;
+    var session = ace.createEditSession("", mode);
+    var editor = ace.edit("editor");
+    editor.setSession(session);
+    jQuery('#editor').show();
+    var id = "tabs-" + tabCounter;
+    var filename = path.replace(/^.*\//, '');
+    editor_open_files[path] = {
+        session  : session,
+        md5      : "",
+        origText : "",
+        tabId    : id,
+        changed  : false,
+        filename : filename
+    };
+
+    var tabTemplate = "<li onmouseover='jQuery(\"##{id}-close\").css(\"visibility\", \"visible\")' onmouseout='jQuery(\"##{id}-close\").css(\"visibility\", \"hidden\")'><a href='##{id}' id='#{id}-tablink'>#{label}<span class='file-changed'><img style='left: 10px; position: relative;' src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif'></span></a> <span id='#{id}-close' class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>";
+    var li = jQuery( tabTemplate.replace(/#\{label\}/g, filename).replace(/#\{id\}/g, id));
+    var tabs = jQuery("#tabs");
+    tabs.find(".ui-tabs-nav").append(li);
+    tabs.append("<div id='"+id+"' class='tabpath'>"+path+"</div>");
+    tabs.tabs("refresh");
+    tabCounter++;
+
     jQuery('.action_menu').hide();
     jQuery.ajax({
         url: 'editor.cgi',
@@ -186,42 +221,22 @@ function _load_file(path, syntax, action_menu) {
 }
 
 function _load_file_complete(path, syntax, data) {
-    // check if that file is already open
-    if(editor_open_files[path]) {
-        return;
-    }
-    var mode = "ace/mode/plain_text";
-    if(syntax != "") {
-        mode = "ace/mode/"+syntax;
-    }
-    current_open_file = path;
-    var session = ace.createEditSession(data.data, mode);
+    var edit = editor_open_files[path];
+    if(!edit) { return; }
     var editor = ace.edit("editor");
-    editor.setSession(session);
+    editor.setSession(edit.session);
+    editor.getSession().setValue(data.data);
     editor.setOptions({
         readOnly: false
     });
-    jQuery('#editor').show();
-    editor.getSession().setValue(data.data);
     editor.gotoLine(1);
-    var id = "tabs-" + tabCounter;
-    var filename = path.replace(/^.*\//, '');
-    editor_open_files[path] = {
-        md5      : data.md5,
-        session  : session,
-        origText : data.data,
-        tabId    : id,
-        changed  : false,
-        filename : filename
-    };
 
-    var tabTemplate = "<li onmouseover='jQuery(\"##{id}-close\").css(\"visibility\", \"visible\")' onmouseout='jQuery(\"##{id}-close\").css(\"visibility\", \"hidden\")'><a href='##{id}' id='#{id}-tablink'>#{label}<span class='file-changed' style='display:none;'>*</span></a> <span id='#{id}-close' class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>";
-    var li = jQuery( tabTemplate.replace(/#\{label\}/g, filename).replace(/#\{id\}/g, id));
+    edit.md5      = data.md5;
+    edit.origText = data.data;
+    edit.changed  = true;
+    _check_changed_file(path);
+
     var tabs = jQuery("#tabs");
-    tabs.find(".ui-tabs-nav").append(li);
-    tabs.append("<div id='"+id+"' class='tabpath'>"+path+"</div>");
-    tabs.tabs("refresh");
-    tabCounter++;
     var openTabs = tabs.find(".ui-tabs-nav")[0].childNodes.length;
     tabs.tabs("option", "active", openTabs-1);
 }
