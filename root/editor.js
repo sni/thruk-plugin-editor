@@ -64,9 +64,9 @@ jQuery(function($) {
         editor.setSession(edit.session);
         current_open_file = path;
         // show matching action menu
-        for(var p in editor_open_files) {
-            var id = editor_open_files[p].tabId;
-            if(p == path) {
+        for(var key in editor_open_files) {
+            var id = editor_open_files[key].tabId;
+            if(key == path) {
                 jQuery('.'+id+"-action").show();
             } else {
                 jQuery('.'+id+"-action").hide();
@@ -262,9 +262,9 @@ function _save_open_tabs() {
     var open = [];
     jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
         var id = jQuery(el).attr('aria-controls');
-        for(var p in editor_open_files) {
-            if(editor_open_files[p].tabId == id) {
-                open.push(p);
+        for(var key in editor_open_files) {
+            if(editor_open_files[key].tabId == id) {
+                open.push(key);
                 break;
             }
         }
@@ -358,8 +358,8 @@ jQuery(window).keypress(function(event) {
 });
 jQuery(window).on('beforeunload', function(e) {
     var hasUnsaved = false;
-    for(var path in editor_open_files) {
-        if(editor_open_files[path].changed) {
+    for(var key in editor_open_files) {
+        if(editor_open_files[key].changed) {
             hasUnsaved = true;
         }
     }

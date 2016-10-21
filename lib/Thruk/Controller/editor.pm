@@ -157,7 +157,9 @@ sub _normalize_config {
         $edit->{'files'} = Thruk::Utils::list($edit->{'files'});
         for my $file (@{$edit->{'files'}}) {
             $file->{'folder'} = Thruk::Utils::list($file->{'folder'});
+            ## no critic
             @{$file->{'folder'}} = map { $_ =~ s|\/$||gmx; $_; } @{$file->{'folder'}};
+            ## use critic
             $file->{'filter'} = Thruk::Utils::list($file->{'filter'});
         }
     }
