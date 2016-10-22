@@ -31,7 +31,7 @@ For example:
     </editor>
 
     <action_menu_actions>
-      perlsyntax   = /usr/bin/perl -wc
+      perlsyntax   = /usr/bin/perl -Mstrict -wc
     </action_menu_actions>
 
 
@@ -43,8 +43,18 @@ With this content:
 
     [
       "-",
-      {"icon":"/thruk/themes/{{theme}}/images/package_go.png","label":"Syntax Check","action":"server://perlsyntax/$FILENAME$"},
+      {"icon":"/thruk/themes/{{theme}}/images/package_go.png",
+       "label":"Syntax Check",
+       "action":"server://perlsyntax/$TMPFILENAME$"
+      },
     ]
+
+
+The editor plugin provides two extra macros.
+
+    - $FILENAME$ contains the path to the open file.
+    - $TMPFILENAME$ contains the path to a temporary file with the unsaved
+      changes. Use this macro for syntax checks or similar.
 
 You have to reload the apache to activate changes
 from the `thruk_local.d` folder.
