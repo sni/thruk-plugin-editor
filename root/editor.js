@@ -331,7 +331,25 @@ function _load_action_menu(path, action_menu) {
                         return(editor.getSession().getValue());
                     }
                 };
-                check_server_action(undefined, link, undefined, undefined, undefined, url_prefix + 'cgi-bin/editor.cgi?serveraction=1', extra_data);
+                var callback = function(data) {
+                    var editor = ace.edit("editor");
+                    editor.session.setOption("useWorker", false);
+                    // clean current annotations
+                    editor.getSession().setAnnotations([]);
+                    if(data && data.rc != 0) {
+                        // detect perl errors and add annotations
+                        var matches = data.msg.match(/(.*) at .*? line (\d)/);
+                        if(matches) {
+                            editor.getSession().setAnnotations([{
+                              row:    Number(matches[2])-1,
+                              column: 0,
+                              text:   matches[1],
+                              type:  "warning"
+                            }]);
+                        }
+                    }
+                }
+                check_server_action(undefined, link, undefined, undefined, undefined, url_prefix + 'cgi-bin/editor.cgi?serveraction=1', extra_data, callback);
 
                 jQuery('.menu-loading').remove();
                 return(true);
