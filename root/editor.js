@@ -176,6 +176,16 @@ function _load_file(path) {
     var action_menu = file_meta_data[path].action;
 
     if(editor_open_files[path]) {
+        // switch to that tab
+        var edit = editor_open_files[path];
+        var tabs = jQuery("#tabs").tabs();
+        jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
+            var id = jQuery(el).attr('aria-controls');
+            if(id == edit.tabId) {
+                tabs.tabs("option", "active", i);
+                return false;
+            }
+        });
         return;
     }
     if(action_menu.length > 0) {
