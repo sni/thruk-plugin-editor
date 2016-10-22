@@ -324,7 +324,14 @@ function _load_action_menu(path, action_menu) {
                 }
 
                 td.appendChild(link);
-                check_server_action(undefined, link, undefined, undefined, undefined, url_prefix + 'cgi-bin/editor.cgi?serveraction=1', {file: path});
+                var extra_data = {
+                    file: path,
+                    current_data: function() {
+                        var editor = ace.edit("editor");
+                        return(editor.getSession().getValue());
+                    }
+                };
+                check_server_action(undefined, link, undefined, undefined, undefined, url_prefix + 'cgi-bin/editor.cgi?serveraction=1', extra_data);
 
                 jQuery('.menu-loading').remove();
                 return(true);
