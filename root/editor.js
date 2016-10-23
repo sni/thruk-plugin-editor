@@ -59,19 +59,7 @@ jQuery(function($) {
     // activate tab handler
     tabs.on("tabsactivate", function(event, ui) {
         var path = ui.newPanel.text();
-        var edit = editor_open_files[path];
-        var editor = ace.edit("editor");
-        editor.setSession(edit.session);
-        current_open_file = path;
-        // show matching action menu
-        for(var key in editor_open_files) {
-            var id = editor_open_files[key].tabId;
-            if(key == path) {
-                jQuery('.'+id+"-action").show();
-            } else {
-                jQuery('.'+id+"-action").hide();
-            }
-        }
+        _activate_session(path);
         _save_open_tabs();
     });
 
@@ -98,7 +86,52 @@ jQuery(function($) {
             _load_file(p);
         })
     }
+
+    // load file from url
+    if(window.location.hash != '#' && window.location.hash != '') {
+        var file = window.location.hash.replace(/^#/,'');
+        var tmp  = file.split(/:/);
+        var line = 1;
+        if(tmp.length == 2) {
+            file = tmp[0];
+            line = tmp[1];
+        }
+        _load_file(file, line);
+        // replace history otherwise we have to press back twice
+        var newhash = "#";
+        if (history.replaceState) {
+            history.replaceState({}, "", newhash);
+        } else {
+            window.location.replace(newhash);
+        }
+    }
 });
+
+function _activate_session(path) {
+    var edit = editor_open_files[path];
+    var editor = ace.edit("editor");
+    editor.setSession(edit.session);
+    current_open_file = path;
+
+    var tabs = jQuery("#tabs").tabs();
+    jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
+        var id = jQuery(el).attr('aria-controls');
+        if(id == edit.tabId) {
+            tabs.tabs("option", "active", i);
+            return false;
+        }
+    });
+
+    // show matching action menu
+    for(var key in editor_open_files) {
+        var id = editor_open_files[key].tabId;
+        if(key == path) {
+            jQuery('.'+id+"-action").show();
+        } else {
+            jQuery('.'+id+"-action").hide();
+        }
+    }
+}
 
 function _close_tab(path) {
     if(editor_open_files[path].changed) {
@@ -127,25 +160,24 @@ function _close_tab(path) {
     _save_open_tabs();
 }
 function _check_changed_file(filename) {
-    var editor = ace.edit("editor");
-    var file = editor_open_files[filename];
+    var edit = editor_open_files[filename];
     // may be undefined during opening a file
-    if(file) {
-        if(file.origText != editor.getSession().getValue()) {
-            if(!file.changed) {
-                jQuery("#"+file.tabId+"-tablink SPAN.file-changed").show();
-                jQuery("#"+file.tabId+"-tablink").css("font-style", "italic");
+    if(edit) {
+        if(edit.origText != edit.session.getValue()) {
+            if(!edit.changed) {
+                jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").show();
+                jQuery("#"+edit.tabId+"-tablink").css("font-style", "italic");
             }
-            file.changed = true;
+            edit.changed = true;
             jQuery('#saveicon').removeClass("black_white");
         } else {
-            if(file.changed) {
-                jQuery("#"+file.tabId+"-tablink SPAN.file-changed").hide();
-                jQuery("#"+file.tabId+"-tablink").css("font-style", "");
+            if(edit.changed) {
+                jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").hide();
+                jQuery("#"+edit.tabId+"-tablink").css("font-style", "");
             }
-            file.changed = false;
+            edit.changed = false;
             jQuery('#saveicon').addClass("black_white");
-            jQuery("#"+file.tabId+"-tablink SPAN.file-changed").text("*");
+            jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").text("*");
         }
     }
 }
@@ -171,21 +203,13 @@ window.onresize = _resize_editor_and_file_tree;
 var editor_open_files = {};
 var current_open_file = "";
 var tabCounter = 0;
-function _load_file(path) {
+function _load_file(path, line) {
     var syntax      = file_meta_data[path].syntax;
     var action_menu = file_meta_data[path].action;
 
     if(editor_open_files[path]) {
         // switch to that tab
-        var edit = editor_open_files[path];
-        var tabs = jQuery("#tabs").tabs();
-        jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
-            var id = jQuery(el).attr('aria-controls');
-            if(id == edit.tabId) {
-                tabs.tabs("option", "active", i);
-                return false;
-            }
-        });
+        _activate_session(path);
         return;
     }
     if(action_menu.length > 0) {
@@ -237,7 +261,7 @@ function _load_file(path) {
         },
         type: 'POST',
         success: function(data) {
-            _load_file_complete(path, syntax, data);
+            _load_file_complete(path, syntax, data, line);
             if(action_menu.length > 0) {
                 _load_action_menu(path, action_menu);
             }
@@ -247,7 +271,7 @@ function _load_file(path) {
     });
 }
 
-function _load_file_complete(path, syntax, data) {
+function _load_file_complete(path, syntax, data, line) {
     var edit = editor_open_files[path];
     if(!edit) { return; }
     var editor = ace.edit("editor");
@@ -256,16 +280,17 @@ function _load_file_complete(path, syntax, data) {
     editor.setOptions({
         readOnly: false
     });
-    editor.gotoLine(1);
+    if(line) {
+        editor.gotoLine(Number(line));
+    } else {
+        editor.gotoLine(1);
+    }
 
     edit.md5      = data.md5;
     edit.origText = data.data;
     edit.changed  = true;
     _check_changed_file(path);
-
-    var tabs = jQuery("#tabs");
-    var openTabs = tabs.find(".ui-tabs-nav")[0].childNodes.length;
-    tabs.tabs("option", "active", openTabs-1);
+    _activate_session(path);
 }
 
 function _save_open_tabs() {
@@ -297,13 +322,19 @@ function _load_action_menu(path, action_menu) {
                 return;
             }
 
+            var display = "none";
+            if(path == current_open_file) {
+                display = "";
+            }
+
             jQuery(data).each(function(i, el) {
                 if(el == "-") {
-                    jQuery('#action_menu_table > tbody:last-child').append("<tr class='nohover "+edit.tabId+"-action action_menu'><td><hr></td></tr>");
+                    jQuery('#action_menu_table > tbody:last-child').append("<tr style='display:"+display+";' class='nohover "+edit.tabId+"-action action_menu'><td><hr></td></tr>");
                     return(true);
                 }
                 var item = document.createElement('tr');
                 item.className = "clickable action_menu "+edit.tabId+"-action";
+                item.style.display = display;
                 jQuery('#action_menu_table > tbody:last-child').append(item);
                 var td = document.createElement('td');
                 item.appendChild(td);
