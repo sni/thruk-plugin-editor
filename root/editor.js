@@ -134,8 +134,17 @@ function _activate_session(path) {
     _reload_file_if_changed(path);
 }
 
+// check current tab every 30 seconds
+window.setInterval(function() {
+    if(current_open_file) {
+        _reload_file_if_changed(current_open_file);
+    }
+}, 30000);
 function _reload_file_if_changed(path) {
     var edit = editor_open_files[path];
+    if(!edit) {
+        return;
+    }
 
     // reload file if its unchanged but changed on server side
     if(!edit.changed) {
