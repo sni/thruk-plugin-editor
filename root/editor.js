@@ -131,6 +131,35 @@ function _activate_session(path) {
             jQuery('.'+id+"-action").hide();
         }
     }
+    _reload_file_if_changed(path);
+}
+
+function _reload_file_if_changed(path) {
+    var edit = editor_open_files[path];
+
+    // reload file if its unchanged but changed on server side
+    if(!edit.changed) {
+        jQuery.ajax({
+            url: 'editor.cgi',
+            data: {
+                action: 'get_file',
+                file:   path,
+                token:  user_token
+            },
+            type: 'POST',
+            success: function(data) {
+                if(data.md5 != edit.md5) {
+                    edit.session.setValue(data.data);
+                    edit.md5      = data.md5;
+                    edit.origText = data.data;
+                    edit.changed  = true;
+                    _check_changed_file(path);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+            }
+        });
+    }
 }
 
 function _close_tab(path) {
@@ -443,8 +472,8 @@ function _save_current_file() {
     if(!editor_open_files[path]) {
         return;
     }
-    var file = editor_open_files[path];
-    if(!file.changed) {
+    var edit = editor_open_files[path];
+    if(!edit.changed) {
         return;
     }
 
@@ -454,27 +483,45 @@ function _save_current_file() {
     var oldSrc = jQuery('#saveicon').attr('src');
     jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/loading-icon.gif');
 
+    // fetch current md5 to see if file has changed meanwhile
     jQuery.ajax({
         url: 'editor.cgi',
         data: {
-            action: 'save_file',
+            action: 'get_file',
             file:   path,
-            data:   savedText,
             token:  user_token
         },
         type: 'POST',
         success: function(data) {
-            editor_open_files[path].md5      = data.md5;
-            editor_open_files[path].origText = savedText;
-            _check_changed_file(path);
-            jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/accept.png').removeClass("black_white");
-            window.setTimeout(function() {
-                jQuery('#saveicon').addClass("black_white");
+            if(data.md5 == edit.md5 || confirm("File has changed on server since we opened it. Really overwrite?")) {
+                jQuery.ajax({
+                    url: 'editor.cgi',
+                    data: {
+                        action: 'save_file',
+                        file:   path,
+                        data:   savedText,
+                        token:  user_token
+                    },
+                    type: 'POST',
+                    success: function(data) {
+                        editor_open_files[path].md5      = data.md5;
+                        editor_open_files[path].origText = savedText;
+                        _check_changed_file(path);
+                        jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/accept.png').removeClass("black_white");
+                        window.setTimeout(function() {
+                            jQuery('#saveicon').addClass("black_white");
+                            jQuery('#saveicon').attr('src', oldSrc);
+                        }, 1000);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        jQuery('#saveicon').attr('src', oldSrc);
+                    }
+                });
+            } else {
                 jQuery('#saveicon').attr('src', oldSrc);
-            }, 1000);
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            jQuery('#saveicon').attr('src', oldSrc);
         }
     });
 }
