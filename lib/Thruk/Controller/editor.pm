@@ -29,8 +29,7 @@ Thruk Controller.
 sub index {
     my($c) = @_;
 
-    # Safe Defaults required for changing backends
-    return unless Thruk::Action::AddDefaults::add_defaults($c, Thruk::ADD_CACHED_DEFAULTS);
+    return unless Thruk::Action::AddDefaults::add_defaults($c, Thruk::ADD_SAFE_DEFAULTS);
 
     $c->stash->{no_auto_reload}    = 1;
     $c->stash->{title}             = 'Editor';
