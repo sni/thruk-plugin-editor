@@ -242,6 +242,9 @@ var editor_open_files = {};
 var current_open_file = "";
 var tabCounter = 0;
 function _load_file(path, line) {
+    if(!file_meta_data[path]) {
+        return;
+    }
     var syntax      = file_meta_data[path].syntax;
     var action_menu = file_meta_data[path].action;
 
