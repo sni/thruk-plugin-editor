@@ -61,3 +61,10 @@ SPAN.icon IMG {
     max-width: 20px;
     margin: 2px 0;
 }
+
+#thruk_message.fail_message TD {
+    text-align: left;
+}
+#thruk_message SPAN {
+    white-space: pre;
+}
