@@ -35,6 +35,16 @@ For example:
     </action_menu_actions>
 
 
+Available syntax highlighting modes are listed as mode-* files in
+https://github.com/sni/thruk-plugin-editor/tree/master/root/ace-builds/src-min-noconflict
+
+Common syntax modes are:
+
+  - sh
+  - perl
+  - python
+  - ini
+
 Then lets create a custom action for a syntax check. Create a new file:
 
 `~/etc/thruk/action_menus/perl_editor_menu.json`.
