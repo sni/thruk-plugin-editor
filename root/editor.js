@@ -146,6 +146,13 @@ function _reload_file_if_changed(path) {
         return;
     }
 
+    // dont check more than every few seconds
+    var now = Math.round(new Date().getTime()/1000);
+    if(edit.lastCheck > now - 10) {
+        return;
+    }
+    edit.lastCheck = now;
+
     // reload file if its unchanged but changed on server side
     if(!edit.changed) {
         jQuery.ajax({
@@ -157,11 +164,17 @@ function _reload_file_if_changed(path) {
             },
             type: 'POST',
             success: function(data) {
+                // check if it has been closed meanwhile
+                edit = editor_open_files[path];
+                if(!edit) {
+                    return;
+                }
+                edit.lastCheck = Math.round(new Date().getTime()/1000);
                 if(data.md5 != edit.md5) {
-                    edit.session.setValue(data.data);
                     edit.md5      = data.md5;
                     edit.origText = data.data;
-                    edit.changed  = true;
+                    edit.changed  = false;
+                    edit.session.setValue(data.data);
                     _check_changed_file(path);
                 }
             },
@@ -204,20 +217,15 @@ function _check_changed_file(filename) {
     // may be undefined during opening a file
     if(edit) {
         if(edit.origText != edit.session.getValue()) {
-            if(!edit.changed) {
-                jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").show();
-                jQuery("#"+edit.tabId+"-tablink").css("font-style", "italic");
-            }
+            jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").show();
+            jQuery("#"+edit.tabId+"-tablink").css("font-style", "italic");
             edit.changed = true;
             jQuery('#saveicon').removeClass("black_white");
         } else {
-            if(edit.changed) {
-                jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").hide();
-                jQuery("#"+edit.tabId+"-tablink").css("font-style", "");
-            }
+            jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").hide().text("*");
+            jQuery("#"+edit.tabId+"-tablink").css("font-style", "");
             edit.changed = false;
             jQuery('#saveicon').addClass("black_white");
-            jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").text("*");
         }
     }
 }
@@ -284,7 +292,8 @@ function _load_file(path, line) {
         origText : "",
         tabId    : id,
         changed  : false,
-        filename : filename
+        filename : filename,
+        lastCheck: Math.round(new Date().getTime()/1000)
     };
 
     var tabTemplate = "<li onmouseover='jQuery(\"##{id}-close\").css(\"visibility\", \"visible\")' onmouseout='jQuery(\"##{id}-close\").css(\"visibility\", \"hidden\")'><a href='##{id}' id='#{id}-tablink'>#{label}<span class='file-changed'><img style='left: 10px; position: relative;' src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif'></span></a> <span id='#{id}-close' class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>";
@@ -324,6 +333,10 @@ function _load_file_complete(path, syntax, data, line) {
     if(!edit) { return; }
     var editor = ace.edit("editor");
     editor.setSession(edit.session);
+    edit.md5       = data.md5;
+    edit.origText  = data.data;
+    edit.changed   = false;
+    edit.lastCheck = Math.round(new Date().getTime()/1000);
     editor.getSession().setValue(data.data);
     editor.setOptions({
         readOnly: false
@@ -334,9 +347,6 @@ function _load_file_complete(path, syntax, data, line) {
         editor.gotoLine(1);
     }
 
-    edit.md5      = data.md5;
-    edit.origText = data.data;
-    edit.changed  = true;
     _check_changed_file(path);
     _activate_session(path);
 }
