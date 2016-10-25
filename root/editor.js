@@ -195,6 +195,8 @@ function _close_tab(path) {
         current_open_file = "";
     }
     jQuery('.'+panelId+"-action").remove();
+    // resize editor, tab bar may have shrinked
+    _resize_editor_and_file_tree();
     _save_open_tabs();
 }
 function _check_changed_file(filename) {
@@ -221,17 +223,20 @@ function _check_changed_file(filename) {
 }
 
 var _resize_editor_and_file_tree = function() {
+    var tabsHeight = jQuery('#tabs').height();
+    if(tabsHeight < 32) { tabsHeight = 32; }
+
     var treetable = document.getElementById('treetable');
-    var w = treetable.offsetWidth, h = jQuery(window).height() - treetable.offsetTop;
-    treetable.style.width  = (w-10) + 'px';
+    var w = jQuery(window).width(), h = jQuery(window).height() - treetable.offsetTop;
+    treetable.style.width  = (w-15) + 'px';
     treetable.style.height = (h-10) + 'px';
 
     var container = document.getElementById('container');
-    container.style.width  = 200 + 'px';
-    container.style.height = (h-55)  + 'px';
+    container.style.width  = '200px';
+    container.style.height = (h - 55)  + 'px';
 
     var editor = document.getElementById('editor');
-    editor.style.height = (h-50)  + 'px';
+    editor.style.height = (h - tabsHeight - 18)  + 'px';
     var editor = ace.edit("editor");
     editor.resize();
 }
@@ -289,6 +294,8 @@ function _load_file(path, line) {
     tabs.append("<div id='"+id+"' class='tabpath'>"+path+"</div>");
     tabs.tabs("refresh");
     tabCounter++;
+    // resize editor, tab bar may have grown in height
+    _resize_editor_and_file_tree();
 
     _save_open_tabs();
 

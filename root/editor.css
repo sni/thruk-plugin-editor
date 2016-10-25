@@ -4,7 +4,8 @@
 
 DIV#container > UL {
   height: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 LI.file_node I.jstree-icon {
@@ -29,19 +30,26 @@ LI.file_node I.jstree-icon {
     margin: 0;
     padding: 0;
     background: none;
-    overflow: auto;
+    overflow: hidden;
+    border-bottom: 1px solid grey;
+    border-radius: 0;
 }
 
 #tabs ul.ui-widget-header {
     background: none;
     border: none;
     border-radius: 0;
-    border-bottom: 1px solid grey;
     height: 32px;
+    padding: 0;
+    margin: 0;
 }
 
 .ui-tabs .ui-tabs-nav li {
     margin-top: 3px;
+}
+
+.ui-tabs .ui-tabs-panel {
+  padding: 0;
 }
 
 DIV.tabpath {
