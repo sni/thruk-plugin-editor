@@ -324,6 +324,7 @@ function _load_file(path, line) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
+            jQuery('.menu-loading').remove();
         }
     });
 }
@@ -384,6 +385,7 @@ function _load_action_menu(path, action_menu) {
             if(path == current_open_file) {
                 display = "";
             }
+            jQuery('.menu-loading').remove();
 
             jQuery(data).each(function(i, el) {
                 if(el == "-") {
@@ -449,8 +451,6 @@ function _load_action_menu(path, action_menu) {
                     }
                 }
                 check_server_action(undefined, link, undefined, undefined, undefined, url_prefix + 'cgi-bin/editor.cgi?serveraction=1', extra_data, callback);
-
-                jQuery('.menu-loading').remove();
                 return(true);
             });
         },
