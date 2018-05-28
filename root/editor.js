@@ -1,22 +1,22 @@
 jQuery(function($) {
     // initialize file tree
-    jQuery("#tool_set").buttonset();
     jQuery('#tool_collapse').button({
-        icons: {primary: 'ui-appsidelist-button'},
-        text: false,
-        label: 'collapse all folder'
+        icon: 'ui-appsidelist-button',
+        showLabel: false,
+        label: 'collapse all folders'
     }).click(function() {
         jQuery('#container').jstree('close_all');
         return;
     });
     jQuery('#tool_expand').button({
-        icons: {primary: 'ui-appsidetree-button'},
-        text: false,
-        label: 'expand all folder'
+        icon: 'ui-appsidetree-button',
+        showLabel: false,
+        label: 'expand all folders'
     }).click(function() {
         jQuery('#container').jstree('open_all');
         return;
     });
+    jQuery("#tool_set").controlgroup();
     jQuery('#container')
         .jstree({
             plugins: [ "themes", "search" ],
