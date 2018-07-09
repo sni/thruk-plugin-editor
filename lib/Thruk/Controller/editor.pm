@@ -115,6 +115,27 @@ sub index {
 }
 
 ##########################################################
+sub TO_JSON {
+    my($c, $edits_only) = @_;
+    my $json = [];
+
+    my $edits = _normalize_config($c->config->{'editor'});
+    return $edits if $edits_only;
+    for my $edit (@{$edits}) {
+        my $folder = { name => $edit->{'name'} || '', 'dirs' => {}, 'files' => {} };
+        my($data, $flat) = _get_files_and_folders($folder, $edit);
+        for my $file (sort keys %{$flat}) {
+            $flat->{$file}->{'file'}    = $file;
+            $flat->{$file}->{'section'} = $edit->{'name'};
+            push @{$json}, $flat->{$file};
+        }
+
+    }
+
+    return($json);
+}
+
+##########################################################
 sub _get_files_and_folders {
     my($data, $edit) = @_;
 
