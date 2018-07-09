@@ -42,8 +42,7 @@ sub index {
     $c->stash->{has_jquery_ui}     = 1;
     $c->stash->{has_proc_inf}      = 0;
 
-    my $edits = _normalize_config($c->config->{'editor'});
-
+    my $edits  = get_edits($c);
     my $action = $c->req->parameters->{'action'} || '';
     if($action eq 'get_file') {
         return unless Thruk::Utils::check_csrf($c);
@@ -115,11 +114,29 @@ sub index {
 }
 
 ##########################################################
+
+=head2 get_edits
+
+    return edit sections
+
+=cut
+sub get_edits {
+    my($c) = @_;
+    return(_authorize($c, _normalize_config($c->config->{'editor'})));
+}
+
+##########################################################
+
+=head2 TO_JSON
+
+    return edit files as json structure
+
+=cut
 sub TO_JSON {
     my($c, $edits_only) = @_;
     my $json = [];
 
-    my $edits = _normalize_config($c->config->{'editor'});
+    my $edits = get_edits($c);
     return $edits if $edits_only;
     for my $edit (@{$edits}) {
         my $folder = { name => $edit->{'name'} || '', 'dirs' => {}, 'files' => {} };
@@ -133,6 +150,36 @@ sub TO_JSON {
     }
 
     return($json);
+}
+
+##########################################################
+sub _authorize {
+    my($c, $edits) = @_;
+    my $groups = $c->cache->get->{'users'}->{$c->stash->{'remote_user'}}->{'contactgroups'};
+
+    my $is_admin = 0;
+    if($c->check_user_roles('authorized_for_system_commands') && $c->check_user_roles('authorized_for_configuration_information')) {
+        $is_admin = 1;
+    }
+
+    my $authorized = [];
+    for my $e (@{$edits}) {
+        if($is_admin || ! exists $e->{'groups'}) {
+            push @{$authorized}, $e;
+        }
+
+        my $allowed = 0;
+        for my $grp (@{$e->{'groups'}}) {
+            if($groups->{$grp}) {
+                $allowed = 1;
+                last;
+            }
+        }
+        if($allowed) {
+            push @{$authorized}, $e;
+        }
+    }
+    return($authorized);
 }
 
 ##########################################################
@@ -186,6 +233,9 @@ sub _normalize_config {
             @{$file->{'folder'}} = map { $_ =~ s|\/$||gmx; $_; } @{$file->{'folder'}};
             ## use critic
             $file->{'filter'} = Thruk::Utils::list($file->{'filter'});
+        }
+        if(exists $edit->{'groups'}) {
+            $edit->{'groups'} = [split(/\s*,\s*/, $edit->{'groups'})];
         }
     }
     return $edits;

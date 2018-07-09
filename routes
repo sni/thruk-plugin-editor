@@ -14,7 +14,8 @@ $app->config->{'use_feature_editor'} = 1;
 # add new menu item, but only if user has access to at least some files
 sub _plugin_editor_menu_visibility {
     my($c) = @_;
-    return($c->config->{'editor'});
+    require Thruk::Controller::editor;
+    return(scalar @{Thruk::Controller::editor::get_edits($c)});
 }
 Thruk::Utils::Menu::insert_item('System', {
                                 'href'       => '/thruk/cgi-bin/editor.cgi',

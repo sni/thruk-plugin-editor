@@ -22,6 +22,7 @@ For example:
 
     <editor>
       name   = Menu Local
+      groups = Admins,Superadmins
       <files>
         folder = etc/thruk/
         filter = menu_local\.conf$
@@ -34,6 +35,28 @@ For example:
       perlsyntax   = /usr/bin/perl -Mstrict -wc
     </action_menu_actions>
 
+You have to reload the apache to activate changes
+from the `thruk_local.d` folder.
+
+
+## Authorization
+
+Authorization can be done either by using the `groups` item like in the example
+above or by putting the edit sections in a Group block like:
+
+    <Group Admins>
+      <editor>
+        name   = Business Process
+        <files>
+          folder = /etc/thruk/bp/
+          filter = \.pm$
+          syntax = perl
+        </files>
+      </editor>
+    </Group>
+
+
+## Syntax Highlighting
 
 Available syntax highlighting modes are listed as mode-* files in
 https://github.com/sni/thruk-plugin-editor/tree/master/root/ace-builds/src-min-noconflict
@@ -44,6 +67,10 @@ Common syntax modes are:
   - perl
   - python
   - ini
+  - nagios
+
+
+## Actions
 
 Then lets create a custom action for a syntax check. Create a new file:
 
@@ -60,11 +87,10 @@ With this content:
     ]
 
 
+## Macros
+
 The editor plugin provides two extra macros.
 
-    - $FILENAME$ contains the path to the open file.
-    - $TMPFILENAME$ contains the path to a temporary file with the unsaved
-      changes. Use this macro for syntax checks or similar.
-
-You have to reload the apache to activate changes
-from the `thruk_local.d` folder.
+  - $FILENAME$ contains the path to the open file.
+  - $TMPFILENAME$ contains the path to a temporary file with the unsaved
+    changes. Use this macro for syntax checks or similar.
