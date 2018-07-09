@@ -13,30 +13,31 @@ Thruk Controller
 
 =head1 METHODS
 
-=head2 index
-
 =cut
 
-use Thruk::Controller::editor;
-
 ##########################################################
-sub index {
+# REST PATH: GET /thruk/editor
+# lists editor sections.
+Thruk::Controller::rest_v1::register_rest_path_v1('GET', qr%^/thruk/editor$%mx, \&_rest_get_thruk_editor);
+sub _rest_get_thruk_editor {
     my($c, $path_info) = @_;
 
-    my @path_info = split(/\//mx, $path_info);
-    return unless($path_info =~ m%^/editor?%mx);
-    return unless($c->req->method eq 'GET');
-
-    # REST PATH: GET /editor/files
-    # lists editor files and path.
-    if($path_info =~ m%^/editor/files?$%mx) {
-        return(Thruk::Controller::editor::TO_JSON($c));
-    }
-
-    # REST PATH: GET /editor
-    # lists editor sections.
+    require Thruk::Controller::editor;
     return(Thruk::Controller::editor::TO_JSON($c, 1));
 }
+
+##########################################################
+# REST PATH: GET /thruk/editor/files
+# lists editor files and path.
+Thruk::Controller::rest_v1::register_rest_path_v1('GET', qr%^/thruk/editor/files?$%mx, \&_rest_get_thruk_editor_files);
+sub _rest_get_thruk_editor_files {
+    my($c, $path_info) = @_;
+
+    require Thruk::Controller::editor;
+    return(Thruk::Controller::editor::TO_JSON($c));
+}
+
+##########################################################
 
 =head1 AUTHOR
 
