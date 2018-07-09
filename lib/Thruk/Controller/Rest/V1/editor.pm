@@ -25,6 +25,7 @@ sub index {
 
     my @path_info = split(/\//mx, $path_info);
     return unless($path_info =~ m%^/editor?%mx);
+    return unless($c->req->method eq 'GET');
 
     # REST PATH: GET /editor/files
     # lists editor files and path.
