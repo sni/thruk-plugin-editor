@@ -74,9 +74,9 @@ sub index {
         my $menus = $c->req->parameters->{'action_menu'};
         my $combined = [];
         for my $name (split/\,/mx, $menus) {
-            my($err, $menu) = @{Thruk::Utils::Filter::get_action_menu($c, $name)};
-            if(!$err) {
-                push @{$combined}, @{decode_json($menu)};
+            my $menu = Thruk::Utils::Filter::get_action_menu($c, $name);
+            if(!$menu->{'err'}) {
+                push @{$combined}, @{decode_json($menu->{'data'})};
             }
         }
         return $c->render(json => $combined);
@@ -155,10 +155,10 @@ sub TO_JSON {
 ##########################################################
 sub _authorize {
     my($c, $edits) = @_;
-    my $groups = $c->cache->get->{'users'}->{$c->stash->{'remote_user'}}->{'contactgroups'};
+    my $contactgroups = Thruk::Utils::array2hash($c->user->{'groups'});
 
     my $is_admin = 0;
-    if($c->check_user_roles('authorized_for_system_commands') && $c->check_user_roles('authorized_for_configuration_information')) {
+    if($c->check_user_roles('admin')) {
         $is_admin = 1;
     }
 
@@ -170,7 +170,7 @@ sub _authorize {
 
         my $allowed = 0;
         for my $grp (@{$e->{'groups'}}) {
-            if($groups->{$grp}) {
+            if($contactgroups->{$grp}) {
                 $allowed = 1;
                 last;
             }

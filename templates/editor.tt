@@ -1,8 +1,8 @@
-﻿[% PROCESS _header.tt css=["plugins/editor/editor.css", "vendor/jstree-3.0.9/themes/default/style.min.css"]
+﻿[% PROCESS _header.tt css=["plugins/editor/editor.css", "vendor/jstree-3.3.7/themes/default/style.min.css"]
                       js=["plugins/editor/editor.js",
                           "plugins/editor/ace-builds/src-min-noconflict/ace.js",
                           "plugins/editor/ace-builds/src-min-noconflict/ext-language_tools.js",
-                          "vendor/jstree-3.0.9/jstree.min.js"]
+                          "vendor/jstree-3.3.7/jstree.min.js"]
 %]
 [% PROCESS _message.tt %]
 
