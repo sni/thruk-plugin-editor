@@ -5,7 +5,7 @@ use warnings;
 use Module::Load qw/load/;
 use Digest::MD5 qw/md5_hex/;
 use Encode qw/decode_utf8/;
-use JSON::XS qw/decode_json/;
+use Cpanel::JSON::XS qw/decode_json/;
 use File::Temp qw/tempfile/;
 #use Thruk::Timer qw/timing_breakpoint/;
 
