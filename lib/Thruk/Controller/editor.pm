@@ -235,7 +235,7 @@ sub _normalize_config {
             $file->{'filter'} = Thruk::Utils::list($file->{'filter'});
         }
         if(exists $edit->{'groups'}) {
-            $edit->{'groups'} = [split(/\s*,\s*/, $edit->{'groups'})];
+            $edit->{'groups'} = [split(/\s*,\s*/mx, $edit->{'groups'})];
         }
     }
     return $edits;
