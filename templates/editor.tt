@@ -42,7 +42,7 @@
   [% FOREACH f = dir.files.keys.sort %]
     <ul>
       <li class="file_node">
-        <a href='#' onclick='_load_file("[% dir.files.$f.path %]/[% f %]")'>[% f %]</a>
+        <a href='#' onclick="_load_file('[% escape_js(dir.files.$f.path) %]/[% escape_js(f) %]')">[% f | html %]</a>
       </li>
     </ul>
   [% END %]
