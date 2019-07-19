@@ -158,9 +158,9 @@ function _reload_file_if_changed(path) {
         jQuery.ajax({
             url: 'editor.cgi',
             data: {
-                action: 'get_file',
-                file:   path,
-                token:  user_token
+                action:   'get_file',
+                file:      path,
+                CSRFtoken: CSRFtoken
             },
             type: 'POST',
             success: function(data) {
@@ -312,9 +312,9 @@ function _load_file(path, line) {
     jQuery.ajax({
         url: 'editor.cgi',
         data: {
-            action: 'get_file',
-            file:   path,
-            token:  user_token
+            action:   'get_file',
+            file:      path,
+            CSRFtoken: CSRFtoken
         },
         type: 'POST',
         success: function(data) {
@@ -372,7 +372,7 @@ function _load_action_menu(path, action_menu) {
         data: {
             action:      'get_action_menu',
             action_menu:  action_menu.join(','),
-            token:        user_token
+            CSRFtoken:    CSRFtoken
         },
         type: 'POST',
         success: function(data) {
@@ -516,9 +516,9 @@ function _save_current_file() {
     jQuery.ajax({
         url: 'editor.cgi',
         data: {
-            action: 'get_file',
-            file:   path,
-            token:  user_token
+            action:   'get_file',
+            file:      path,
+            CSRFtoken: CSRFtoken
         },
         type: 'POST',
         success: function(data) {
@@ -526,10 +526,10 @@ function _save_current_file() {
                 jQuery.ajax({
                     url: 'editor.cgi',
                     data: {
-                        action: 'save_file',
-                        file:   path,
-                        data:   savedText,
-                        token:  user_token
+                        action:   'save_file',
+                        file:      path,
+                        data:      savedText,
+                        CSRFtoken: CSRFtoken
                     },
                     type: 'POST',
                     success: function(data) {
