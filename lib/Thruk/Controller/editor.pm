@@ -234,7 +234,7 @@ sub _normalize_config {
             ## use critic
             $file->{'filter'} = Thruk::Utils::list($file->{'filter'});
         }
-        if(exists $edit->{'groups'}) {
+        if(exists $edit->{'groups'} && ref $edit->{'groups'} eq "") {
             $edit->{'groups'} = [split(/\s*,\s*/mx, $edit->{'groups'})];
         }
     }
