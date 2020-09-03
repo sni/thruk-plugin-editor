@@ -164,11 +164,11 @@ sub _authorize {
 
     my $authorized = [];
     for my $e (@{$edits}) {
+        my $allowed = 0;
         if($is_admin || ! exists $e->{'groups'}) {
-            push @{$authorized}, $e;
+            $allowed = 1;
         }
 
-        my $allowed = 0;
         for my $grp (@{$e->{'groups'}}) {
             if($contactgroups->{$grp}) {
                 $allowed = 1;
