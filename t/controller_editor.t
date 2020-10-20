@@ -3,16 +3,13 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    my $tests = 12;
-    plan tests => $tests;
-}
-
-BEGIN {
     use lib('t');
     require TestUtils;
     import TestUtils;
 }
 
+plan skip_all => 'backends required' if(!-s 'thruk_local.conf' and !defined $ENV{'PLACK_TEST_EXTERNALSERVER_URI'});
+plan tests => 12;
 
 ###########################################################
 # test modules
