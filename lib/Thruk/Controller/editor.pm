@@ -40,7 +40,7 @@ sub index {
     $c->stash->{disable_backspace} = 1;
     $c->stash->{no_tt_trim}        = 1;
     $c->stash->{has_jquery_ui}     = 1;
-    $c->stash->{has_proc_inf}      = 0;
+    $c->stash->{has_proc_info}     = 0;
 
     my $edits  = get_edits($c);
     my $action = $c->req->parameters->{'action'} || '';
