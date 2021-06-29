@@ -5,6 +5,7 @@
                           "vendor/jstree-3.3.8/jstree.min.js"]
 %]
 [% PROCESS _message.tt %]
+[% PROCESS _blocks.tt %]
 
 <table border="0" width="100%" cellspacing="0" cellpadding="0" id="top_pane"[% IF hidetop == 1 %]style="visibility:hidden; display:none;"[% END %]>
   <tr>
@@ -13,6 +14,10 @@
     </td>
     <td align="center" valign="top" width="33%">
       <div align="center" class='statusTitle'>Editor</div>
+      [% PROCESS _button btn = {
+        form   => {},
+        button => { id => 'editor_back_button', class => 'update_button', onclick => 'return false;', text => 'back', style => 'margin-top: 20px; display: none;' },
+      }%]
     </td>
     <td align="center" valign="top" width="33%"></td>
     <td align="right" valign="bottom">
@@ -26,7 +31,7 @@
   [% folder = dir.dirs.$d %]
     <ul>
       <li>
-        <a href="#">[% d %]</a>
+        <a href="#"[% IF folder.defined("peer") %] onclick="_load_remote_peer('[% escape_js(folder.peer) %]')"[% END %]>[% d %]</a>
         [% INCLUDE dir_block dir = folder %]
       </li>
     </ul>
@@ -40,18 +45,50 @@
   [% END %]
 [% END %]
 
-<table style="table-layout: fixed; border-collapse: collapse;" border=0 id="treetable" width="100%">
-  <tr>
-    <td valign="top" style="text-align: left; width: 200px; border: 1px solid grey; background: white;">
-      <div style="width: 200px; height: 34px; border-bottom: 1px solid grey;">
+<table style="table-layout: fixed; border-collapse: collapse; min-width: 100%;" border=0 id="treetable">
+  <tr class="editorrow">
+    <td valign="top" style="text-align: left; width: 200px; border: 1px solid grey; background: white; padding-left: 3px; padding-top: 2px;">
+      <div style="width: 200px; height: 32px;">
         <div id="tool_set">
           <button name="expand" id="tool_collapse"><label for="tool_collapse">C</label></button>
           <button name="expand" id="tool_expand"><label for="tool_expand">E</label></button>
           <input type="text" style="width: 100px; margin-left: 20px; margin-top: 4px;" placeholder="search..." onkeyup="_tree_search(this.value)">
         </div>
       </div>
+    </td>
+    <td valign="top" style="border: 1px solid grey; background: white;">
+      <div id="tabs"><ul></ul></div>
+    </td>
+    <td valign="top" style="width: 200px;" rowspan="2">
+      <!-- actions -->
+      <table border='0' cellpadding="0" cellspacing="0" style="margin-left: 4px; margin-top: -2px;">
+        <tr>
+          <td align="center" valign="top" class='confPanel'>
+            <div class='dataTitle'>Actions</div>
+            <table border='1' cellpadding="0" cellspacing="0" class="command extCommandPanel confPanel" id="action_menu_table">
+              <tr>
+                <td class="command">
+                  <a href='' onclick='_save_current_file(); return(false);'>
+                    <span class="icon"><img id="saveicon" class="black_white" src='[% url_prefix %]themes/[% theme %]/images/disk.png' border="0" alt='Save Changes' title='Save Changes' width="16" height="16"></span>Save Changes
+                  </a>
+                  <span style="color: grey;"> (Ctrl+s)</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class="editorrow">
+    <td valign="top" style="text-align: left; width: 200px; border: 1px solid grey; background: white;">
       <div id="container">
       <ul>
+        [% IF iframed %]
+        <li id="o_back">
+          <a href="#" onclick="_load_local_editor()">&lt; back</a>
+        </li>
+        [% END %]
         [% FOREACH edit = files_tree %]
         <li id="o_[% loop.index %]">
           <a href="#">[% edit.name %]</a>
@@ -62,37 +99,12 @@
       </div>
     </td>
     <td valign="top" style="border: 1px solid grey; background: white;">
-    <div id="tabs"><ul></ul></div>
-    <div id="editor"></div>
-    </td>
-    <td valign="top" style="width: 200px;">
-
-
-<table border='0' cellpadding="0" cellspacing="0" style="margin-left: 4px; margin-top: -2px;">
-  <tr>
-    <td align="center" valign="top" class='confPanel'>
-      <div class='dataTitle'>Actions</div>
-      <table border='1' cellpadding="0" cellspacing="0" class="command extCommandPanel confPanel" id="action_menu_table">
-        <tr>
-          <td class="command">
-            <a href='' onclick='_save_current_file(); return(false);'>
-              <span class="icon"><img id="saveicon" class="black_white" src='[% url_prefix %]themes/[% theme %]/images/disk.png' border="0" alt='Save Changes' title='Save Changes' width="16" height="16"></span>Save Changes
-            </a>
-            <span style="color: grey;"> (Ctrl+s)</span>
-          </td>
-        </tr>
-      </table>
+      <div style="position: absolute; display: none;" id="iframeloading"><img src="[% url_prefix %]themes/[% theme %]/images/loading-icon.gif" alt="loading"></div>
+      <div id="editor"></div>
     </td>
   </tr>
 </table>
-
-
-
-
-
-    </td>
-  </tr>
-</table>
+<iframe id="remoteframe" style="padding:0; margin: 0; border: 0; display: none; min-width: 100%;"></iframe>
 
 <script type="text/javascript">
 <!--

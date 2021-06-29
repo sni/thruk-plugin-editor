@@ -29,8 +29,9 @@ Thruk Controller.
 sub index {
     my($c) = @_;
 
-    return unless Thruk::Action::AddDefaults::add_defaults($c, Thruk::ADD_SAFE_DEFAULTS);
+    return unless Thruk::Action::AddDefaults::add_defaults($c, Thruk::ADD_CACHED_DEFAULTS);
 
+    $c->stash->{'hide_backends_chooser'}   = 1;
     $c->stash->{no_auto_reload}    = 1;
     $c->stash->{title}             = 'Editor';
     $c->stash->{page}              = 'config';
@@ -100,10 +101,20 @@ sub index {
         my $folders = [];
         for my $edit (@{$edits}) {
             my $folder = { name => $edit->{'name'} || '', 'dirs' => {}, 'files' => {} };
-            my($data, $flat) = _get_files_and_folders($folder, $edit);
+            my($data, $flat) = _get_files_and_folders($c, $folder, $edit);
             push @{$folders}, $data;
             %{$all_files} = (%{$all_files}, %{$flat});
         }
+
+        # add remote files
+        if(scalar @{$c->db->get_http_peers()} > 0) {
+            my $f = { name => 'remote', 'dirs' => {}, 'files' => {} };
+            for my $peer (@{$c->db->get_http_peers()}) {
+                $f->{'dirs'}->{$peer->{'name'}} = { 'dirs' => {}, 'files' => {}, peer => $peer->{'key'} };
+            }
+            push @{$folders}, $f;
+        }
+
         $c->stash->{files_tree} = $folders;
         $c->stash->{files_meta} = $all_files;
     }
@@ -140,7 +151,7 @@ sub TO_JSON {
     return $edits if $edits_only;
     for my $edit (@{$edits}) {
         my $folder = { name => $edit->{'name'} || '', 'dirs' => {}, 'files' => {} };
-        my($data, $flat) = _get_files_and_folders($folder, $edit);
+        my($data, $flat) = _get_files_and_folders($c, $folder, $edit);
         for my $file (sort keys %{$flat}) {
             $flat->{$file}->{'file'}    = $file;
             $flat->{$file}->{'section'} = $edit->{'name'};
@@ -184,7 +195,7 @@ sub _authorize {
 
 ##########################################################
 sub _get_files_and_folders {
-    my($data, $edit) = @_;
+    my($c, $data, $edit) = @_;
 
     my $all_files = {};
     for my $file (@{$edit->{'files'}}) {

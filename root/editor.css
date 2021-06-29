@@ -1,5 +1,9 @@
+BODY.page_editor.iframed {
+  margin-top: -25px;
+}
+
 #editor {
-    height: 300px;
+    height: 1300px;
 }
 
 DIV#container > UL {
@@ -31,7 +35,6 @@ LI.file_node I.jstree-icon {
     padding: 0;
     background: none;
     overflow: hidden;
-    border-bottom: 1px solid grey;
     border-radius: 0;
 }
 

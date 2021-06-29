@@ -40,6 +40,12 @@ jQuery(function($) {
                 jQuery('#container').jstree('open_node', '#'+data.node.id);
             }
         });
+    jQuery('#editor_back_button').button({
+        icon: 'ui-l-arrow-button'
+    }).click(function() {
+        _reset_local_editor();
+        return false;
+    });
 
     // initialize open file tabs
     var tabs = jQuery("#tabs").tabs();
@@ -75,6 +81,10 @@ jQuery(function($) {
         _check_changed_file(current_open_file);
     });
     jQuery('#editor').hide();
+
+    jQuery("#remoteframe").on("load", function() {
+        _load_remote_peer_ready();
+    });
 
     _resize_editor_and_file_tree();
 
@@ -234,9 +244,16 @@ var _resize_editor_and_file_tree = function() {
     var tabsHeight = jQuery('#tabs').height();
     if(tabsHeight < 32) { tabsHeight = 32; }
 
-    var treetable = document.getElementById('treetable');
-    var w = jQuery(window).width(), h = jQuery(window).height() - treetable.offsetTop;
-    treetable.style.width  = (w-15) + 'px';
+    var treetable   = document.getElementById('treetable');
+    var remoteframe = document.getElementById('remoteframe');
+    var offset = treetable.offsetTop > 0 ? treetable.offsetTop : remoteframe.offsetTop;
+    h = jQuery(window).height() - offset;
+    if(h == 0)  { return; }
+    if(h < 300) { h = 300; }
+    if(document.location.toString().match("iframed=")) {
+        h = h + 5;
+    }
+
     treetable.style.height = (h-10) + 'px';
 
     var container = document.getElementById('container');
@@ -244,9 +261,11 @@ var _resize_editor_and_file_tree = function() {
     container.style.height = (h - 55)  + 'px';
 
     var editor = document.getElementById('editor');
-    editor.style.height = (h - tabsHeight - 18)  + 'px';
+    editor.style.height = (h - 50)  + 'px';
     var editor = ace.edit("editor");
     editor.resize();
+
+    remoteframe.style.height = (h - 5) + 'px';
 }
 
 window.onresize = _resize_editor_and_file_tree;
@@ -460,20 +479,20 @@ function _load_action_menu(path, action_menu) {
     });
 }
 
-jQuery(window).keypress(function(event) {
-    if (event.ctrlKey || event.metaKey) {
+jQuery(window).bind("keydown", function(event) {
+    if(event.ctrlKey || event.metaKey) {
         switch (String.fromCharCode(event.which).toLowerCase()) {
         case 's':
-            _save_current_file();
             event.preventDefault();
+            _save_current_file();
             return false;
         case 'w':
             // this seems not to work in most browsers
             // but at least you can use ctrl+w on osx now and meta+w on win/linux
+            event.preventDefault();
             if(current_open_file) {
                 _close_tab(current_open_file);
             }
-            event.preventDefault();
             try{event.preventDefault()}catch(ex){}
             return false;
         }
@@ -563,4 +582,33 @@ function _tree_search(value) {
     }
     jQuery('#container').jstree('open_all');
     jQuery('#container').jstree('search', value);
+}
+
+function _load_remote_peer(peer) {
+    cookieSave('thruk_editor_tabs', '');
+    jQuery('#editor_back_button').show();
+    jQuery("#remoteframe").attr('src', 'proxy.cgi/'+peer+'/demo/thruk/cgi-bin/editor.cgi?minimal=2&hidetop=1&iframed=1');
+    jQuery("#iframeloading").show();
+    jQuery("#editor").hide();
+}
+
+function _load_remote_peer_ready() {
+    jQuery("#treetable").hide();
+    jQuery("#remoteframe").show();
+    jQuery("#iframeloading").hide();
+}
+
+function _load_local_editor() {
+    if(window.parent && window.parent._reset_local_editor) {
+        window.parent._reset_local_editor();
+    }
+}
+
+function _reset_local_editor() {
+    jQuery("#remoteframe").hide();
+    jQuery("#iframeloading").hide();
+    jQuery("#treetable").show();
+    jQuery("#editor").show();
+    jQuery('#editor_back_button').hide();
+    _save_open_tabs();
 }
