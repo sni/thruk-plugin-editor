@@ -1,7 +1,9 @@
 package Thruk::Controller::Rest::V1::editor;
 
-use strict;
 use warnings;
+use strict;
+
+use Thruk::Controller::rest_v1 ();
 
 =head1 NAME
 

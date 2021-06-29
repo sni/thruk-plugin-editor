@@ -99,7 +99,7 @@
       </div>
     </td>
     <td valign="top" style="border: 1px solid grey; background: white;">
-      <div style="position: absolute; display: none;" id="iframeloading"><img src="[% url_prefix %]themes/[% theme %]/images/loading-icon.gif" alt="loading"></div>
+      <div style="position: absolute; display: none;" id="iframeloading"><img src="[% url_prefix %]themes/[% theme %]/images/loading-icon.gif" height="16" width="16" alt="loading"></div>
       <div id="editor"></div>
     </td>
   </tr>

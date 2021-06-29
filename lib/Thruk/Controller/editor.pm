@@ -1,12 +1,16 @@
 package Thruk::Controller::editor;
 
-use strict;
 use warnings;
-use Module::Load qw/load/;
+use strict;
+use Cpanel::JSON::XS qw/decode_json/;
 use Digest::MD5 qw/md5_hex/;
 use Encode qw/decode_utf8/;
-use Cpanel::JSON::XS qw/decode_json/;
 use File::Temp qw/tempfile/;
+
+use Thruk ();
+use Thruk::Utils ();
+use Thruk::Utils::Status ();
+
 #use Thruk::Timer qw/timing_breakpoint/;
 
 =head1 NAME
