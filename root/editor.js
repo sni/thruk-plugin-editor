@@ -238,6 +238,21 @@ function _check_changed_file(filename) {
             jQuery('#saveicon').addClass("black_white");
         }
     }
+
+    // check if we have to prevent page unload
+    var hasUnsaved = false;
+    for(var key in editor_open_files) {
+        if(editor_open_files[key].changed) {
+            hasUnsaved = true;
+        }
+    }
+    if(hasUnsaved) {
+        jQuery(window).on('beforeunload', function(e) {
+            return 'You have unsaved sessions. Are you sure to leave?';
+        });
+    } else {
+        jQuery(window).off('beforeunload');
+    }
 }
 
 var _resize_editor_and_file_tree = function() {
@@ -498,18 +513,6 @@ jQuery(window).bind("keydown", function(event) {
         }
     }
     return true;
-});
-jQuery(window).on('beforeunload', function(e) {
-    var hasUnsaved = false;
-    for(var key in editor_open_files) {
-        if(editor_open_files[key].changed) {
-            hasUnsaved = true;
-        }
-    }
-    if(hasUnsaved) {
-        return 'You have unsaved sessions. Are you sure to leave?';
-    }
-    return "";
 });
 
 function _save_current_file() {
