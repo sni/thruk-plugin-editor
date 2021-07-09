@@ -587,10 +587,10 @@ function _tree_search(value) {
     jQuery('#container').jstree('search', value);
 }
 
-function _load_remote_peer(peer) {
+function _load_remote_peer(peer, thruk_url) {
     cookieSave('thruk_editor_tabs', '');
     jQuery('#editor_back_button').show();
-    jQuery("#remoteframe").attr('src', 'proxy.cgi/'+peer+'/demo/thruk/cgi-bin/editor.cgi?minimal=2&hidetop=1&iframed=1');
+    jQuery("#remoteframe").attr('src', 'proxy.cgi/'+peer+thruk_url+'cgi-bin/editor.cgi?minimal=2&hidetop=1&iframed=1');
     jQuery("#iframeloading").show();
     jQuery("#editor").hide();
 }
