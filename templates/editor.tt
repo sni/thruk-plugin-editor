@@ -31,8 +31,11 @@
   [% folder = dir.dirs.$d %]
     <ul>
       <li>
-        [% remote_thruk_url = get_remote_thruk_url(c, folder.peer); IF remote_thruk_url %]
-        <a href="#"[% IF folder.defined("peer") %] onclick="_load_remote_peer('[% escape_js(folder.peer) %]', '[% escape_js(remote_thruk_url) %]')"[% END %]>[% d %]</a>
+        [% remote_thruk_url = "" %]
+        [% IF folder.defined("peer") %]
+          [% remote_thruk_url = get_remote_thruk_url(c, folder.peer) %]
+        [% END %]
+        <a href="#"[% IF remote_thruk_url != "" %] onclick="_load_remote_peer('[% escape_js(folder.peer) %]', '[% escape_js(remote_thruk_url) %]')"[% END %]>[% d %]</a>
         [% INCLUDE dir_block dir = folder %]
         [% END %]
       </li>
