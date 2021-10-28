@@ -300,13 +300,14 @@ function _load_file(path, line) {
         _activate_session(path);
         return;
     }
-    if(action_menu.length > 0) {
-        jQuery('#action_menu_table > tbody:last-child').append("<tr class='nohover menu-loading'><td colspan=2><hr></td></tr><tr class='nohover menu-loading'><td colspan=2><img src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif' width=16 height=16></td></tr");
-    }
-
     // check if that file is already open
     if(editor_open_files[path]) {
         return;
+    }
+
+    if(action_menu.length > 0) {
+        jQuery('.menu-loading').hide();
+        jQuery('#action_menu_table > tbody:last-child').append("<tr class='nohover menu-loading'><td colspan=2><hr></td></tr><tr class='nohover menu-loading'><td colspan=2><img src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif' width=16 height=16></td></tr");
     }
 
     var mode = "ace/mode/plain_text";
