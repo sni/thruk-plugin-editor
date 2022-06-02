@@ -1,22 +1,4 @@
 jQuery(function($) {
-    // initialize file tree
-    jQuery('#tool_collapse').button({
-        icon: 'ui-appsidelist-button',
-        showLabel: false,
-        label: 'collapse all folders'
-    }).click(function() {
-        jQuery('#container').jstree('close_all');
-        return;
-    });
-    jQuery('#tool_expand').button({
-        icon: 'ui-appsidetree-button',
-        showLabel: false,
-        label: 'expand all folders'
-    }).click(function() {
-        jQuery('#container').jstree('open_all');
-        return;
-    });
-    jQuery("#tool_set").controlgroup();
     jQuery('#container')
         .jstree({
             plugins: [ "themes", "search" ],
@@ -40,33 +22,9 @@ jQuery(function($) {
                 jQuery('#container').jstree('open_node', '#'+data.node.id);
             }
         });
-    jQuery('#editor_back_button').button({
-        icon: 'ui-l-arrow-button'
-    }).click(function() {
+    jQuery('#editor_back_button').click(function() {
         _reset_local_editor();
         return false;
-    });
-
-    // initialize open file tabs
-    var tabs = jQuery("#tabs").tabs();
-    tabs.find(".ui-tabs-nav").sortable({
-      axis: "x",
-      stop: function() {
-        _save_open_tabs();
-        tabs.tabs("refresh");
-      }
-    });
-    // close tab handler
-    tabs.on("click", "span.ui-icon-close", function() {
-      var panelId = jQuery(this).closest("li").attr( "aria-controls" );
-      var path = jQuery("#"+panelId).text();
-      _close_tab(path);
-    });
-    // activate tab handler
-    tabs.on("tabsactivate", function(event, ui) {
-        var path = ui.newPanel.text();
-        _activate_session(path);
-        _save_open_tabs();
     });
 
     // initialize editor
@@ -123,25 +81,20 @@ function _activate_session(path) {
     editor.setSession(edit.session);
     current_open_file = path;
 
-    var tabs = jQuery("#tabs").tabs();
-    jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
-        var id = jQuery(el).attr('aria-controls');
-        if(id == edit.tabId) {
-            tabs.tabs("option", "active", i);
-            return false;
-        }
-    });
+    jQuery("SPAN.tabs").removeClass("active");
 
     // show matching action menu
     for(var key in editor_open_files) {
         var id = editor_open_files[key].tabId;
         if(key == path) {
+            jQuery("#"+id).addClass("active");
             jQuery('.'+id+"-action").show();
         } else {
             jQuery('.'+id+"-action").hide();
         }
     }
     _reload_file_if_changed(path);
+    _save_open_tabs();
 }
 
 // check current tab every 30 seconds
@@ -201,13 +154,10 @@ function _close_tab(path) {
         }
     }
     panelId = editor_open_files[path].tabId;
-    jQuery('#'+panelId+"-tablink").closest("li").remove();
     delete editor_open_files[path];
     jQuery("#"+panelId).remove();
-    var tabs = jQuery("#tabs").tabs();
-    tabs.tabs("refresh");
-    var openTabs = tabs.find(".ui-tabs-nav")[0].childNodes.length;
-    tabs.tabs("option", "active", openTabs-1);
+    var openTabs = jQuery("SPAN.tabs").length;
+    jQuery("SPAN.tabs").last().click();
     if(openTabs == 0) {
         var editor = ace.edit("editor");
         editor.setValue("");
@@ -227,15 +177,13 @@ function _check_changed_file(filename) {
     // may be undefined during opening a file
     if(edit) {
         if(edit.origText != edit.session.getValue()) {
-            jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").show();
-            jQuery("#"+edit.tabId+"-tablink").css("font-style", "italic");
+            jQuery("#"+edit.tabId+" SPAN.file-changed").show();
+            jQuery("#"+edit.tabId+" .js-tablink").css("font-style", "italic");
             edit.changed = true;
-            jQuery('#saveicon').removeClass("black_white");
         } else {
-            jQuery("#"+edit.tabId+"-tablink SPAN.file-changed").hide().text("*");
-            jQuery("#"+edit.tabId+"-tablink").css("font-style", "");
+            jQuery("#"+edit.tabId+" SPAN.file-changed").hide().text("*");
+            jQuery("#"+edit.tabId+" .js-tablink").css("font-style", "");
             edit.changed = false;
-            jQuery('#saveicon').addClass("black_white");
         }
     }
 
@@ -256,31 +204,8 @@ function _check_changed_file(filename) {
 }
 
 var _resize_editor_and_file_tree = function() {
-    var tabsHeight = jQuery('#tabs').height();
-    if(tabsHeight < 32) { tabsHeight = 32; }
-
-    var treetable   = document.getElementById('treetable');
-    var remoteframe = document.getElementById('remoteframe');
-    var offset = treetable.offsetTop > 0 ? treetable.offsetTop : remoteframe.offsetTop;
-    h = jQuery(window).height() - offset;
-    if(h == 0)  { return; }
-    if(h < 300) { h = 300; }
-    if(document.location.toString().match("iframed=")) {
-        h = h + 5;
-    }
-
-    treetable.style.height = (h-10) + 'px';
-
-    var container = document.getElementById('container');
-    container.style.width  = '200px';
-    container.style.height = (h - 55)  + 'px';
-
-    var editor = document.getElementById('editor');
-    editor.style.height = (h - 50)  + 'px';
     var editor = ace.edit("editor");
     editor.resize();
-
-    remoteframe.style.height = (h - 5) + 'px';
 }
 
 window.onresize = _resize_editor_and_file_tree;
@@ -307,7 +232,7 @@ function _load_file(path, line) {
 
     if(action_menu.length > 0) {
         jQuery('.menu-loading').hide();
-        jQuery('#action_menu_table > tbody:last-child').append("<tr class='nohover menu-loading'><td colspan=2><hr></td></tr><tr class='nohover menu-loading'><td colspan=2><img src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif' width=16 height=16></td></tr");
+        jQuery('#action_menu_table').append("<div class='nohover menu-loading'><hr><\/div><div class='nohover menu-loading'><div class='spinner'><\/div>");
     }
 
     var mode = "ace/mode/plain_text";
@@ -331,12 +256,13 @@ function _load_file(path, line) {
         lastCheck: Math.round(new Date().getTime()/1000)
     };
 
-    var tabTemplate = "<li onmouseover='jQuery(\"##{id}-close\").css(\"visibility\", \"visible\")' onmouseout='jQuery(\"##{id}-close\").css(\"visibility\", \"hidden\")'><a href='##{id}' id='#{id}-tablink'>#{label}<span class='file-changed'><img style='left: 10px; position: relative;' src='"+url_prefix + 'themes/' +  theme + "/images/loading-icon.gif'></span></a> <span id='#{id}-close' class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>";
-    var li = jQuery( tabTemplate.replace(/#\{label\}/g, filename).replace(/#\{id\}/g, id));
-    var tabs = jQuery("#tabs");
-    tabs.find(".ui-tabs-nav").append(li);
-    tabs.append("<div id='"+id+"' class='tabpath'>"+path+"</div>");
-    tabs.tabs("refresh");
+    var tab = '<span class="tabs active p-0 clickable" id="'+id+'" data-path="'+path+'" onmouseover="jQuery(this).find(\'.js-close-icon\').css(\'visibility\', \'visible\')" onmouseout="jQuery(this).find(\'.js-close-icon\').css(\'visibility\', \'hidden\')">'
+             +'<span class="clickable inline-block p-2 js-tablink" onclick="_activate_session(this.parentElement.dataset.path)">'+filename+'<\/span>'
+             +'<span class="file-changed"><div class="spinner"><\/div></span>'
+             +'<i class="uil uil-times clickable hoverable ml-1 js-close-icon" style="visibility: hidden;" onclick="_close_tab(this.parentElement.dataset.path);"><\/i>'
+             +'<\/span>';
+    jQuery("#tabs").append(tab);
+
     tabCounter++;
     // resize editor, tab bar may have grown in height
     _resize_editor_and_file_tree();
@@ -389,8 +315,8 @@ function _load_file_complete(path, syntax, data, line) {
 
 function _save_open_tabs() {
     var open = [];
-    jQuery(jQuery("#tabs").find(".ui-tabs-nav")[0].childNodes).each(function(i, el) {
-        var id = jQuery(el).attr('aria-controls');
+    jQuery("SPAN.tabs").each(function(i, el) {
+        var id = jQuery(el).attr('id');
         for(var key in editor_open_files) {
             if(editor_open_files[key].tabId == id) {
                 open.push(key);
@@ -424,21 +350,18 @@ function _load_action_menu(path, action_menu) {
 
             jQuery(data).each(function(i, el) {
                 if(el == "-") {
-                    jQuery('#action_menu_table > tbody:last-child').append("<tr style='display:"+display+";' class='nohover "+edit.tabId+"-action action_menu'><td><hr></td></tr>");
+                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='nohover "+edit.tabId+"-action'><hr><\/div>");
                     return(true);
                 }
-                var item = document.createElement('tr');
-                item.className = "clickable action_menu "+edit.tabId+"-action";
+                var item = document.createElement('div');
+                item.className = "clickable "+edit.tabId+"-action";
                 item.style.display = display;
-                jQuery('#action_menu_table > tbody:last-child').append(item);
-                var td = document.createElement('td');
-                item.appendChild(td);
-                td.className = 'command';
+                jQuery('#action_menu_table').append(item);
 
                 var link = document.createElement('a');
                 if(el.icon) {
                     var span       = document.createElement('span');
-                    span.className = 'icon';
+                    span.className = "inline-block pr-2";
                     var img        = document.createElement('img');
                     img.src        = replace_macros(el.icon);
                     img.title      = el.title ? el.title : '';
@@ -459,7 +382,7 @@ function _load_action_menu(path, action_menu) {
                     }
                 }
 
-                td.appendChild(link);
+                item.appendChild(link);
                 var extra_data = {
                     file: path,
                     current_data: function() {
@@ -532,8 +455,8 @@ function _save_current_file() {
     var editor    = ace.edit("editor");
     var savedText = editor.getSession().getValue();
 
-    var oldSrc = jQuery('#saveicon').attr('src');
-    jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/loading-icon.gif');
+    jQuery('.js-saveicon').find('DIV.spinner').css("display", "");
+    jQuery('.js-saveicon').find('I').css("display", "none");
 
     // fetch current md5 to see if file has changed meanwhile
     jQuery.ajax({
@@ -559,21 +482,26 @@ function _save_current_file() {
                         editor_open_files[path].md5      = data.md5;
                         editor_open_files[path].origText = savedText;
                         _check_changed_file(path);
-                        jQuery('#saveicon').attr('src', url_prefix + 'themes/' +  theme + '/images/accept.png').removeClass("black_white");
+                        jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
+                        jQuery('.js-saveicon').find('I.fa-check').css("display", "");
                         window.setTimeout(function() {
-                            jQuery('#saveicon').addClass("black_white");
-                            jQuery('#saveicon').attr('src', oldSrc);
+                            jQuery('.js-saveicon').find('I.fa-save').css("display", "");
+                            jQuery('.js-saveicon').find('I.fa-check').css("display", "none");
                         }, 1000);
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        jQuery('#saveicon').attr('src', oldSrc);
+                        jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
+                        jQuery('.js-saveicon').find('I').css("display", "");
                     }
                 });
             } else {
-                jQuery('#saveicon').attr('src', oldSrc);
+                jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
+                jQuery('.js-saveicon').find('I.fa-save').css("display", "");
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
+            jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
+            jQuery('.js-saveicon').find('I.uil-exclamation').css("display", "").attr("title", textStatus);
         }
     });
 }
@@ -597,7 +525,7 @@ function _load_remote_peer(peer, thruk_url) {
 }
 
 function _load_remote_peer_ready() {
-    jQuery("#treetable").hide();
+    jQuery("#localeditor").hide();
     jQuery("#remoteframe").show();
     jQuery("#iframeloading").hide();
 }
@@ -611,7 +539,7 @@ function _load_local_editor() {
 function _reset_local_editor() {
     jQuery("#remoteframe").hide();
     jQuery("#iframeloading").hide();
-    jQuery("#treetable").show();
+    jQuery("#localeditor").show();
     jQuery("#editor").show();
     jQuery('#editor_back_button').hide();
     _save_open_tabs();
