@@ -49,7 +49,7 @@
   <div class="flexrow flex-nowrap h-full" id="localeditor">
     <div class="card w-full h-full">
       <div class="flexrow gap-0 flex-nowrap h-full">
-        <div class="flexcol gap-0 h-auto" style="flex: 0 0 200px;">
+        <div class="flexcol gap-0 h-auto overflow-auto" style="flex: 0 0 250px;">
           <div class="head">
             <div class="radiogroup">
               <input type="radio" name="tool_expand" id="tool_collapse" onclick="jQuery('#container').jstree('close_all');"><label for="tool_collapse"><i class="uil uil-folder-minus"></i></label>

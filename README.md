@@ -80,7 +80,7 @@ With this content:
 
     [
       "-",
-      {"icon":"/thruk/themes/{{theme}}/images/package_go.png",
+      {"icon":"fa-spell-check",
        "label":"Syntax Check",
        "action":"server://perlsyntax/$TMPFILENAME$"
       },

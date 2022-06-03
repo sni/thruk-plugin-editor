@@ -362,11 +362,7 @@ function _load_action_menu(path, action_menu) {
                 if(el.icon) {
                     var span       = document.createElement('span');
                     span.className = "inline-block pr-2";
-                    var img        = document.createElement('img');
-                    img.src        = replace_macros(el.icon);
-                    img.title      = el.title ? el.title : '';
-                    img.width      = 16;
-                    img.height     = 16;
+                    var img        = action_menu_icon(el.icon);
                     span.appendChild(img);
                     link.appendChild(span);
                 }
