@@ -2,6 +2,8 @@
 
 This plugin allows you to edit text files.
 
+![Thruk Editor Plugin](preview.png "Thruk Editor Plugin")
+
 ## Installation
 
 Assuming you are using OMD (omdistro.org).
