@@ -170,7 +170,7 @@ sub TO_JSON {
 ##########################################################
 sub _authorize {
     my($c, $edits) = @_;
-    my $contactgroups = Thruk::Utils::array2hash($c->user->{'groups'});
+    my $contactgroups = $c->user ? Thruk::Utils::array2hash($c->user->{'groups'}) : [];
 
     my $is_admin = 0;
     if($c->check_user_roles('admin')) {
