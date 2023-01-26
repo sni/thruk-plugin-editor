@@ -25,11 +25,16 @@ For example:
     <editor>
       name   = Menu Local
       groups = Admins,Superadmins
+
       <files>
         folder = etc/thruk/
         filter = menu_local\.conf$
         syntax = perl
         action = perl_editor_menu
+
+        # hooks which will be executed before or after saving a single file.
+        #pre_save_cmd   =
+        #post_save_cmd  = ./examples/config_tool_git_checkin
       </files>
     </editor>
 
@@ -69,6 +74,7 @@ Common syntax modes are:
   - perl
   - python
   - ini
+  - naemon
   - nagios
 
 
@@ -88,11 +94,29 @@ With this content:
       },
     ]
 
+## Action Scripts / Hooks
 
-## Macros
+The action scripts can do anything, ex.: do a syntax check or activate changes
+somewhere. The output is displayed as a popup to the user. The colour depends
+on the exit code of the script. `0` is green, everything else is red.
 
-The editor plugin provides two extra macros.
+A `pre_save_cmd` script exiting other than 0 will cancel the current save attempt.
 
-  - $FILENAME$ contains the path to the open file.
-  - $TMPFILENAME$ contains the path to a temporary file with the unsaved
-    changes. Use this macro for syntax checks or similar.
+### Macros
+
+The editor plugin provides some extra macros.
+
+  - `$FILENAME$` contains the path to the open (unsaved) file.
+  - `$TMPFILENAME$` contains the path to a temporary file with the
+     current (unsaved) content changes. Use this macro for syntax checks or similar.
+
+### Environment
+
+The editor plugin provides some extra environment variables when running
+pre/post hook scripts. Use those variables ex.: to automatically create git commits.
+
+  - `$THRUK_EDITOR_FILENAME` same as `$FILENAME$` in macros.
+  - `$THRUK_EDITOR_TMPFILENAME` same as `$TMPFILENAME$` in macros (only available in pre script).
+  - `$THRUK_EDITOR_STAGE` can be either 'pre' or 'post'.
+  - `$THRUK_SUMMARY_MESSAGE` set from user input (popup on save).
+  - `$THRUK_SUMMARY_DETAILS` set from user input (popup on save).

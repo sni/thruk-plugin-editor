@@ -142,6 +142,7 @@ function _reload_file_if_changed(path) {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
+                ajax_xhr_error_logonly(jqXHR, textStatus, errorThrown);
             }
         });
     }
@@ -232,7 +233,7 @@ function _load_file(path, line) {
 
     if(action_menu.length > 0) {
         jQuery('.menu-loading').hide();
-        jQuery('#action_menu_table').append("<div class='nohover menu-loading'><hr><\/div><div class='nohover menu-loading'><div class='spinner'><\/div>");
+        jQuery('#action_menu_table').append("<div class='no-hover menu-loading'><hr><\/div><div class='no-hover menu-loading'><div class='spinner'><\/div>");
     }
 
     var mode = "ace/mode/plain_text";
@@ -285,6 +286,7 @@ function _load_file(path, line) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
+            ajax_xhr_error_logonly(jqXHR, textStatus, errorThrown);
             jQuery('.menu-loading').remove();
         }
     });
@@ -350,7 +352,7 @@ function _load_action_menu(path, action_menu) {
 
             jQuery(data).each(function(i, el) {
                 if(el == "-") {
-                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='nohover "+edit.tabId+"-action'><hr><\/div>");
+                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='no-hover "+edit.tabId+"-action'><hr><\/div>");
                     return(true);
                 }
                 var item = document.createElement('div');
@@ -409,6 +411,7 @@ function _load_action_menu(path, action_menu) {
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {
+            ajax_xhr_error_logonly(jqXHR, textStatus, errorThrown);
             jQuery('.menu-loading').remove();
         }
     });
@@ -475,6 +478,11 @@ function _save_current_file() {
                     },
                     type: 'POST',
                     success: function(data) {
+                        showMessageFromCookie(); // might contain failed post cmd output
+                        if(data && data.err) {
+                            set_save_error(data.err);
+                            return;
+                        }
                         editor_open_files[path].md5      = data.md5;
                         editor_open_files[path].origText = savedText;
                         _check_changed_file(path);
@@ -486,20 +494,29 @@ function _save_current_file() {
                         }, 1000);
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
-                        jQuery('.js-saveicon').find('I').css("display", "");
+                        var msg = thruk_xhr_error('save failed: ', '', textStatus, jqXHR, errorThrown);
+                        set_save_error(msg);
                     }
                 });
             } else {
                 jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
+                jQuery('.js-saveicon').find('I').css("display", "none");
                 jQuery('.js-saveicon').find('I.fa-save').css("display", "");
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
-            jQuery('.js-saveicon').find('I.uil-exclamation').css("display", "").attr("title", textStatus);
+            var msg = thruk_xhr_error('save failed: ', '', textStatus, jqXHR, errorThrown);
+            set_save_error(msg);
         }
     });
+}
+
+function set_save_error(msg) {
+    showMessageFromCookie();
+    jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
+    jQuery('.js-saveicon').find('I').css("display", "none");
+    jQuery('.js-saveicon').find('I.fa-save').css("display", "");
+    jQuery('.js-saveicon').find('I.uil-exclamation').css("display", "").attr("title", msg);
 }
 
 function _tree_search(value) {

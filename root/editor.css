@@ -5,3 +5,10 @@ LI.file_node I.jstree-icon {
 LI.remote_folder I.jstree-icon {
 	background-position: -260px -36px;
 }
+
+DIV.actionbox DIV.spinner {
+	width: 20px !important;
+	height: 20px !important;
+	margin-right: 4px;
+	margin-bottom: 1px;
+}

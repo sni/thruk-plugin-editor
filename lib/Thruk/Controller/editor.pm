@@ -52,7 +52,7 @@ sub index {
     if($action eq 'get_file') {
         return unless Thruk::Utils::check_csrf($c);
         my $req_file = $c->req->parameters->{'file'};
-        my $file = _get_file($edits, $req_file);
+        my($file, undef, undef) = _get_file($edits, $req_file);
         if($file) {
             my $data = Thruk::Utils::IO::read($file);
             my $json = {data => decode_utf8($data), md5 => md5_hex($data) };
@@ -64,11 +64,38 @@ sub index {
     elsif($action eq 'save_file') {
         return unless Thruk::Utils::check_csrf($c);
         my $req_file = $c->req->parameters->{'file'};
-        my $file = _get_file($edits, $req_file);
+        my($file, $edit, $files) = _get_file($edits, $req_file);
         if($file) {
+            # run pre hook
+            if($files->{'pre_save_cmd'}) {
+                my($fh, $tmpfile) = tempfile();
+                CORE::close($fh);
+                Thruk::Utils::IO::write($tmpfile, $c->req->parameters->{'data'});
+                local $ENV{'THRUK_EDITOR_FILENAME'}    = $file;
+                local $ENV{'THRUK_EDITOR_TMPFILENAME'} = $tmpfile;
+                local $ENV{'THRUK_EDITOR_STAGE'}       = 'pre';
+                my($rc, $out) = Thruk::Utils::IO::cmd($c, $files->{'pre_save_cmd'});
+                unlink($tmpfile);
+                if($rc != 0) {
+                    Thruk::Utils::set_message( $c, { style => 'fail_message', msg => 'pre save hook failed: '.$rc.': '.$out, escape => 0 });
+                    return $c->render(json => { "err" => "pre save hook failed"});
+                }
+            }
+
             my $data = $c->req->parameters->{'data'};
             Thruk::Utils::IO::write($file, $data);
             my $json = { md5 => md5_hex($data) };
+
+            # run post hook
+            if($files->{'post_save_cmd'}) {
+                local $ENV{'THRUK_EDITOR_FILENAME'} = $file;
+                local $ENV{'THRUK_EDITOR_STAGE'}    = 'post';
+                my($rc, $out) = Thruk::Utils::IO::cmd($c, $files->{'post_save_cmd'});
+                if($rc != 0) {
+                    Thruk::Utils::set_message( $c, { style => 'fail_message', msg => 'post save hook failed (rc: '.$rc.') '.$out, escape => 0 });
+                }
+            }
+
             return $c->render(json => $json);
         }
         $c->log->error("editor got save request for unlisted file: ".$req_file);
@@ -89,7 +116,7 @@ sub index {
     elsif($c->req->parameters->{'serveraction'}) {
         return unless Thruk::Utils::check_csrf($c);
         my $req_file = $c->req->parameters->{'file'};
-        my $file = _get_file($edits, $req_file);
+        my($file, undef, undef) = _get_file($edits, $req_file);
         my($rc, $msg) = (1, "no such file or directory");
         if($file) {
             my($fh, $tmpfile) = tempfile();
@@ -204,8 +231,15 @@ sub _get_files_and_folders {
     my $all_files = {};
     for my $file (@{$edit->{'files'}}) {
         for my $folder (@{$file->{'folder'}}) {
-            for my $filter (@{$file->{'filter'}}) {
-                my $files = Thruk::Utils::find_files($folder, $filter);
+            if($file->{'filter'}) {
+                for my $filter (@{$file->{'filter'}}) {
+                    my $files = Thruk::Utils::find_files($folder, $filter);
+                    for my $filename (@{$files}) {
+                        $all_files->{$filename} = { syntax => $file->{'syntax'}, path => $folder, action => Thruk::Utils::list($file->{'action'}) };
+                    }
+                }
+            } else {
+                my $files = Thruk::Utils::find_files($folder);
                 for my $filename (@{$files}) {
                     $all_files->{$filename} = { syntax => $file->{'syntax'}, path => $folder, action => Thruk::Utils::list($file->{'action'}) };
                 }
@@ -260,13 +294,22 @@ sub _normalize_config {
 sub _get_file {
     my($edits, $filename) = @_;
     for my $edit (@{$edits}) {
-        for my $file (@{$edit->{'files'}}) {
-            for my $folder (@{$file->{'folder'}}) {
-                for my $filter (@{$file->{'filter'}}) {
-                    my $files = Thruk::Utils::find_files($folder, $filter);
+        for my $file_section (@{$edit->{'files'}}) {
+            for my $folder (@{$file_section->{'folder'}}) {
+                if($file_section->{'filter'}) {
+                    for my $filter (@{$file_section->{'filter'}}) {
+                        my $files = Thruk::Utils::find_files($folder, $filter);
+                        for my $file (@{$files}) {
+                            if($file eq $filename) {
+                                return($file, $edit, $file_section);
+                            }
+                        }
+                    }
+                } else {
+                    my $files = Thruk::Utils::find_files($folder);
                     for my $file (@{$files}) {
                         if($file eq $filename) {
-                            return($file);
+                            return($file, $edit, $file_section);
                         }
                     }
                 }

@@ -80,20 +80,20 @@
         </div>
       </div>
     </div>
-    <div class="card" style="flex: 0 0 200px;">
+    <div class="card overflow-hidden" style="flex: 0 0 200px;">
       <div class="head">
         <h3>Actions</h3>
       </div>
       <div class="actionbox" id="action_menu_table">
-        <div>
-          <a href='#' onclick='_save_current_file(); return(false);' class="js-saveicon">
+        <div class="flexrow gap-x-1 justify-between clickable" onclick='_save_current_file(); return(false);'>
+          <a href='#' class="js-saveicon w-min">
             <div class="spinner w-5 h-5 mr-1" style="display: none;"></div>
             <i class="fa-solid fa-save w-5 h-5 mr-1"></i>
             <i class="fa-solid fa-check round green w-5 h-5 mr-1" style="display: none;"></i>
             <i class="uil uil-exclamation round yellow w-5 h-5 mr-1" style="display: none;"></i>
             Save Changes
           </a>
-          <span class="textHINTsoft"> (Ctrl+s)</span>
+          <div class="textHINTsoft w-min"> (Ctrl+s)</div>
         </div>
       </div>
     </div>
