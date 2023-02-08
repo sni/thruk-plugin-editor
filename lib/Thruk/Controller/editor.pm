@@ -230,16 +230,6 @@ sub _authorize {
 sub _get_files_and_folders {
     my($c, $data, $edit) = @_;
 
-    sub _add_file {
-        my($file, $folder) = @_;
-        return({
-            syntax          => $file->{'syntax'},
-            path            => $folder,
-            action          => Thruk::Utils::list($file->{'action'}),
-            has_save_prompt => $file->{'pre_save_cmd'} && ($file->{'show_summary_prompt'} // 1) || 0, # enable prompt if pre save commands exists and not disabled by show_summary_prompt
-        });
-    }
-
     my $all_files = {};
     for my $file (@{$edit->{'files'}}) {
         for my $folder (@{$file->{'folder'}}) {
@@ -277,6 +267,17 @@ sub _get_files_and_folders {
         $cur->{'files'}->{$filename} = { 'syntax' => $meta->{'syntax'} || '', path => $origpath, action => $meta->{'action'} };
     }
     return($data, $all_files);
+}
+
+##########################################################
+sub _add_file {
+    my($file, $folder) = @_;
+    return({
+        syntax          => $file->{'syntax'},
+        path            => $folder,
+        action          => Thruk::Utils::list($file->{'action'}),
+        has_save_prompt => $file->{'pre_save_cmd'} && ($file->{'show_summary_prompt'} // 1) || 0, # enable prompt if pre save commands exists and not disabled by show_summary_prompt
+    });
 }
 
 ##########################################################
