@@ -66,15 +66,18 @@ sub index {
         my $req_file = $c->req->parameters->{'file'};
         my($file, $edit, $files) = _get_file($edits, $req_file);
         if($file) {
+            local $ENV{'THRUK_EDITOR_FILENAME'} = $file;
+            local $ENV{'THRUK_SUMMARY_MESSAGE'} = $c->req->parameters->{'summary'}     // '';
+            local $ENV{'THRUK_SUMMARY_DETAILS'} = $c->req->parameters->{'summarydesc'} // '';
+
             # run pre hook
             if($files->{'pre_save_cmd'}) {
                 my($fh, $tmpfile) = tempfile();
                 CORE::close($fh);
                 Thruk::Utils::IO::write($tmpfile, $c->req->parameters->{'data'});
-                local $ENV{'THRUK_EDITOR_FILENAME'}    = $file;
                 local $ENV{'THRUK_EDITOR_TMPFILENAME'} = $tmpfile;
                 local $ENV{'THRUK_EDITOR_STAGE'}       = 'pre';
-                my($rc, $out) = Thruk::Utils::IO::cmd($c, $files->{'pre_save_cmd'});
+                my($rc, $out) = Thruk::Utils::IO::cmd($c, $files->{'pre_save_cmd'}." pre 2>&1");
                 unlink($tmpfile);
                 if($rc != 0) {
                     Thruk::Utils::set_message( $c, { style => 'fail_message', msg => 'pre save hook failed: '.$rc.': '.$out, escape => 0 });
@@ -88,9 +91,8 @@ sub index {
 
             # run post hook
             if($files->{'post_save_cmd'}) {
-                local $ENV{'THRUK_EDITOR_FILENAME'} = $file;
                 local $ENV{'THRUK_EDITOR_STAGE'}    = 'post';
-                my($rc, $out) = Thruk::Utils::IO::cmd($c, $files->{'post_save_cmd'});
+                my($rc, $out) = Thruk::Utils::IO::cmd($c, $files->{'post_save_cmd'}." post 2>&1");
                 if($rc != 0) {
                     Thruk::Utils::set_message( $c, { style => 'fail_message', msg => 'post save hook failed (rc: '.$rc.') '.$out, escape => 0 });
                 }
@@ -228,6 +230,16 @@ sub _authorize {
 sub _get_files_and_folders {
     my($c, $data, $edit) = @_;
 
+    sub _add_file {
+        my($file, $folder) = @_;
+        return({
+            syntax          => $file->{'syntax'},
+            path            => $folder,
+            action          => Thruk::Utils::list($file->{'action'}),
+            has_save_prompt => $file->{'pre_save_cmd'} && ($file->{'show_summary_prompt'} // 1) || 0, # enable prompt if pre save commands exists and not disabled by show_summary_prompt
+        });
+    }
+
     my $all_files = {};
     for my $file (@{$edit->{'files'}}) {
         for my $folder (@{$file->{'folder'}}) {
@@ -235,13 +247,13 @@ sub _get_files_and_folders {
                 for my $filter (@{$file->{'filter'}}) {
                     my $files = Thruk::Utils::find_files($folder, $filter);
                     for my $filename (@{$files}) {
-                        $all_files->{$filename} = { syntax => $file->{'syntax'}, path => $folder, action => Thruk::Utils::list($file->{'action'}) };
+                        $all_files->{$filename} = _add_file($file, $folder);
                     }
                 }
             } else {
                 my $files = Thruk::Utils::find_files($folder);
                 for my $filename (@{$files}) {
-                    $all_files->{$filename} = { syntax => $file->{'syntax'}, path => $folder, action => Thruk::Utils::list($file->{'action'}) };
+                    $all_files->{$filename} = _add_file($file, $folder);
                 }
             }
         }

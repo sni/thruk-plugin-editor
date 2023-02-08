@@ -33,8 +33,9 @@ For example:
         action = perl_editor_menu
 
         # hooks which will be executed before or after saving a single file.
-        #pre_save_cmd   =
-        #post_save_cmd  = ./examples/config_tool_git_checkin
+        #pre_save_cmd        =
+        #post_save_cmd       = ./examples/config_tool_git_checkin
+        #show_summary_prompt = 1   # enable/disable summary prompt if hooks are set
       </files>
     </editor>
 

@@ -181,10 +181,12 @@ function _check_changed_file(filename) {
             jQuery("#"+edit.tabId+" SPAN.file-changed").show();
             jQuery("#"+edit.tabId+" .js-tablink").css("font-style", "italic");
             edit.changed = true;
+            jQuery('.js-saveicon').removeClass('disabled');
         } else {
             jQuery("#"+edit.tabId+" SPAN.file-changed").hide().text("*");
             jQuery("#"+edit.tabId+" .js-tablink").css("font-style", "");
             edit.changed = false;
+            jQuery('.js-saveicon').addClass('disabled');
         }
     }
 
@@ -438,7 +440,25 @@ jQuery(window).bind("keydown", function(event) {
     return true;
 });
 
-function _save_current_file() {
+function _save_prompt_change_summary(path, submit_callback) {
+    var has_prompt      = file_meta_data[path].has_save_prompt;
+    if(!has_prompt) {
+        return(submit_callback());
+    }
+
+    openModalWindowUrl('parts.cgi?part=_summary_prompt', function() {
+        jQuery("#summary-dialog-form BUTTON.js-ok").one("click", function() {
+            var text = jQuery("#summary-text").val();
+            var desc = jQuery("#summary-desc").val();
+            closeModalWindow();
+            return(submit_callback(text, desc));
+        });
+    });
+
+    return(true);
+}
+
+function _save_current_file(skipPrompt, extraData) {
     var path = current_open_file;
     if(!path) {
         return;
@@ -448,6 +468,14 @@ function _save_current_file() {
     }
     var edit = editor_open_files[path];
     if(!edit.changed) {
+        return;
+    }
+    var has_prompt = file_meta_data[path].has_save_prompt;
+
+    if(has_prompt && !skipPrompt) {
+        _save_prompt_change_summary(path, function(title, desc) {
+            _save_current_file(true, {summary: title, summarydesc: desc});
+        });
         return;
     }
 
@@ -468,14 +496,20 @@ function _save_current_file() {
         type: 'POST',
         success: function(data) {
             if(data.md5 == edit.md5 || confirm("File has changed on server since we opened it. Really overwrite?")) {
+                postdata = {
+                    action:   'save_file',
+                    file:      path,
+                    data:      savedText,
+                    CSRFtoken: CSRFtoken
+                };
+                if(extraData) {
+                    for(var key in extraData) {
+                        postdata[key] = extraData[key];
+                    }
+                }
                 jQuery.ajax({
-                    url: 'editor.cgi',
-                    data: {
-                        action:   'save_file',
-                        file:      path,
-                        data:      savedText,
-                        CSRFtoken: CSRFtoken
-                    },
+                    url:  'editor.cgi',
+                    data:  postdata,
                     type: 'POST',
                     success: function(data) {
                         showMessageFromCookie(); // might contain failed post cmd output
@@ -486,11 +520,13 @@ function _save_current_file() {
                         editor_open_files[path].md5      = data.md5;
                         editor_open_files[path].origText = savedText;
                         _check_changed_file(path);
+                        jQuery('.js-saveicon').removeClass("disabled");
                         jQuery('.js-saveicon').find('DIV.spinner').css("display", "none");
                         jQuery('.js-saveicon').find('I.fa-check').css("display", "");
                         window.setTimeout(function() {
                             jQuery('.js-saveicon').find('I.fa-save').css("display", "");
                             jQuery('.js-saveicon').find('I.fa-check').css("display", "none");
+                            _check_changed_file(path);
                         }, 1000);
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
