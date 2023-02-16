@@ -276,7 +276,7 @@ sub _add_file {
         syntax          => $file->{'syntax'},
         path            => $folder,
         action          => Thruk::Utils::list($file->{'action'}),
-        has_save_prompt => $file->{'pre_save_cmd'} && ($file->{'show_summary_prompt'} // 1) || 0, # enable prompt if pre save commands exists and not disabled by show_summary_prompt
+        has_save_prompt => ($file->{'pre_save_cmd'}//$file->{'post_save_cmd'}) && ($file->{'show_summary_prompt'} // 1) || 0, # enable prompt if pre save commands exists and not disabled by show_summary_prompt
     });
 }
 
