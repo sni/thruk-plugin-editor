@@ -109,7 +109,9 @@ sub index {
         my $combined = [];
         for my $name (split/\,/mx, $menus) {
             my $menu = Thruk::Utils::Filter::get_action_menu($c, $name);
-            if(!$menu->{'err'}) {
+            if($menu->{'err'}) {
+                push @{$combined}, { err => $menu->{'err'}};
+            } else {
                 push @{$combined}, @{decode_json($menu->{'data'})};
             }
         }

@@ -235,7 +235,7 @@ function _load_file(path, line) {
 
     if(action_menu.length > 0) {
         jQuery('.menu-loading').hide();
-        jQuery('#action_menu_table').append("<div class='no-hover menu-loading'><hr><\/div><div class='no-hover menu-loading'><div class='spinner'><\/div>");
+        jQuery('#action_menu_table').append("<div class='no-hover menu-loading px-0'><hr><\/div><div class='no-hover menu-loading'><div class='spinner'><\/div>");
     }
 
     var mode = "ace/mode/plain_text";
@@ -353,8 +353,14 @@ function _load_action_menu(path, action_menu) {
             jQuery('.menu-loading').remove();
 
             jQuery(data).each(function(i, el) {
+                if(is_object(el) && el["err"]) {
+                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='no-hover "+edit.tabId+"-action px-0'><hr><\/div>");
+                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='no-hover textALERT text-center "+edit.tabId+"-action px-0'>failed to load menu<\/div>");
+                    console.error(el["err"]);
+                    return(true);
+                }
                 if(el == "-") {
-                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='no-hover "+edit.tabId+"-action'><hr><\/div>");
+                    jQuery('#action_menu_table').append("<div style='display:"+display+";' class='no-hover "+edit.tabId+"-action px-0'><hr><\/div>");
                     return(true);
                 }
                 var item = document.createElement('div');
@@ -365,7 +371,7 @@ function _load_action_menu(path, action_menu) {
                 var link = document.createElement('a');
                 if(el.icon) {
                     var span       = document.createElement('span');
-                    span.className = "inline-block pr-2";
+                    span.className = "inline-block pr-0";
                     var img        = action_menu_icon(el.icon);
                     span.appendChild(img);
                     link.appendChild(span);
