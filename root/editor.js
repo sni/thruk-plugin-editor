@@ -81,7 +81,7 @@ function _activate_session(path) {
     editor.setSession(edit.session);
     current_open_file = path;
 
-    jQuery("SPAN.tabs").removeClass("active");
+    jQuery("#tabs").find("SPAN.tabs").removeClass("active");
 
     // show matching action menu
     for(var key in editor_open_files) {
@@ -93,6 +93,7 @@ function _activate_session(path) {
             jQuery('.'+id+"-action").hide();
         }
     }
+
     _reload_file_if_changed(path);
     _save_open_tabs();
 }
@@ -157,8 +158,8 @@ function _close_tab(path) {
     panelId = editor_open_files[path].tabId;
     delete editor_open_files[path];
     jQuery("#"+panelId).remove();
-    var openTabs = jQuery("SPAN.tabs").length;
-    jQuery("SPAN.tabs").last().click();
+    var openTabs = jQuery("#tabs").find("SPAN.tabs").length;
+    jQuery("#tabs").find("SPAN.tabs").last().click();
     if(openTabs == 0) {
         var editor = ace.edit("editor");
         editor.setValue("");
@@ -228,7 +229,7 @@ function _load_file(path, line) {
         _activate_session(path);
         return;
     }
-    // check if that file is already open
+    // double check if that file is open now
     if(editor_open_files[path]) {
         return;
     }
@@ -259,7 +260,7 @@ function _load_file(path, line) {
         lastCheck: Math.round(new Date().getTime()/1000)
     };
 
-    var tab = '<span class="tabs active p-0 clickable" id="'+id+'" data-path="'+path+'" onmouseover="jQuery(this).find(\'.js-close-icon\').css(\'visibility\', \'visible\')" onmouseout="jQuery(this).find(\'.js-close-icon\').css(\'visibility\', \'hidden\')">'
+    var tab = '<span class="tabs active p-0 clickable" id="'+id+'" data-path="'+path+'" title="'+path+'" onmouseover="jQuery(this).find(\'.js-close-icon\').css(\'visibility\', \'visible\')" onmouseout="jQuery(this).find(\'.js-close-icon\').css(\'visibility\', \'hidden\')">'
              +'<span class="clickable inline-block p-2 js-tablink" onclick="_activate_session(this.parentElement.dataset.path)">'+filename+'<\/span>'
              +'<span class="file-changed"><div class="spinner"><\/div></span>'
              +'<i class="uil uil-times clickable hoverable ml-1 js-close-icon" style="visibility: hidden;" onclick="_close_tab(this.parentElement.dataset.path);"><\/i>'
@@ -319,7 +320,7 @@ function _load_file_complete(path, syntax, data, line) {
 
 function _save_open_tabs() {
     var open = [];
-    jQuery("SPAN.tabs").each(function(i, el) {
+    jQuery("#tabs").find("SPAN.tabs").each(function(i, el) {
         var id = jQuery(el).attr('id');
         for(var key in editor_open_files) {
             if(editor_open_files[key].tabId == id) {

@@ -58,7 +58,7 @@
             <input type="text" class="w-full ml-2" placeholder="search..." onkeyup="_tree_search(this.value)">
           </div>
           <div id="container" class="w-full h-full">
-            <ul class="w-full">
+            <ul class="w-full" style="display: none;">
               [% IF iframed %]
               <li id="o_back">
                 <a href="#" onclick="_load_local_editor()">&lt; back</a>
