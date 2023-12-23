@@ -1,4 +1,4 @@
-jQuery(function($) {
+jQuery(document).ready(function() {
     jQuery('#container')
         .jstree({
             plugins: [ "themes", "search" ],
