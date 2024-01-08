@@ -52,15 +52,26 @@ sub index {
     if($action eq 'get_file') {
         return unless Thruk::Utils::check_csrf($c);
         my $req_file = $c->req->parameters->{'file'};
-        my($file, undef, undef) = _get_file($edits, $req_file);
+        my($file, $edit, $files) = _get_file($edits, $req_file);
         if($file) {
-            my $data = Thruk::Utils::IO::read($file);
+            my $data;
+            if($files->{'pre_load_cmd'}) {
+                local $ENV{'THRUK_EDITOR_FILENAME'} = $file;
+                my $rc, $data = Thruk::Utils::IO::cmd($c, $files->{'pre_load_cmd'}." pre_load 2>&1");
+                if($rc != 0) {
+                    Thruk::Utils::set_message( $c, { style => 'fail_message', msg => 'pre load hook failed: '.$rc.': '.$data, escape => 0 });
+                    return $c->render(json => { "err" => "pre load hook failed"});
+                }
+            } else {
+                $data = Thruk::Utils::IO::read($file);
+            }
             my $json = {data => decode_utf8($data), md5 => md5_hex($data) };
             return $c->render(json => $json);
         }
         $c->log->error("editor got request for unlisted file: ".$req_file);
         return $c->render(json => { data => "", "err" => "not allowed"});
     }
+
     elsif($action eq 'save_file') {
         return unless Thruk::Utils::check_csrf($c);
         my $req_file = $c->req->parameters->{'file'};
