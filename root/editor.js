@@ -32,6 +32,7 @@ jQuery(document).ready(function() {
     editor.setTheme("ace/theme/clouds");
     editor.setOptions({
         enableLiveAutocompletion: true,
+        showPrintMargin: false,
         readOnly: true
     });
     // update changed flag for tabs
